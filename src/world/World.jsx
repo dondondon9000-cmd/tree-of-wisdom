@@ -3,6 +3,7 @@ import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import GardenSky from './GardenSky'
 import WindPetals from './WindPetals'
+import GrassField from './GrassField'
 import SeedField from './SeedField'
 import TalkSeed from './TalkSeed'
 
@@ -13,15 +14,17 @@ export default function World() {
       gl={{ antialias: true }}
     >
       <fog attach="fog" args={['#e9cba9', 10, 42]} />
-      <ambientLight intensity={0.35} />
-      <hemisphereLight args={['#aebfd8', '#4a5a3a', 0.45]} />
+      <ambientLight intensity={0.45} />
+      <hemisphereLight args={['#aebfd8', '#3d5a2c', 0.45]} />
       <pointLight position={[3, 3, 5]} intensity={1.4} color="#ffe3b0" distance={26} decay={2} />
+      <pointLight position={[0, -1.5, -8]} intensity={1.8} color="#eaf0c8" distance={24} decay={2} />
 
       <GardenSky />
-      <mesh position={[0, -6, -6]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, -4.5, -6]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[42, 32]} />
-        <meshStandardMaterial color="#4a5a3a" roughness={1} />
+        <meshStandardMaterial color="#3d5a2c" roughness={1} />
       </mesh>
+      <GrassField />
       <WindPetals />
 
       <SeedField />
