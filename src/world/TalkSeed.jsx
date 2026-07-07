@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGardenStore } from '../lib/store'
 import { seedGeometry } from './seedGeometry'
+import { glowTexture } from './glowTexture'
 
 // The talk button. Not a microphone icon — a seed that breathes faster
 // and brighter than the rest to draw the eye, and flares when pressed.
@@ -13,6 +14,7 @@ const BASE_SIZE = 0.55
 export default function TalkSeed({ position = [0, 0, -2] }) {
   const mesh = useRef()
   const material = useRef()
+  const glow = useRef()
   const [hovered, setHovered] = useState(false)
   const isRecording = useGardenStore((s) => s.isRecording)
   const startRecording = useGardenStore((s) => s.startRecording)
@@ -33,6 +35,11 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
     if (material.current) {
       const baseIntensity = isRecording ? 0.9 : 0.32
       material.current.emissiveIntensity = baseIntensity + breath * 0.12
+    }
+
+    if (glow.current) {
+      glow.current.scale.setScalar(3.2 + breath * 0.3)
+      glow.current.material.opacity = (isRecording ? 0.85 : 0.55) + breath * 0.1
     }
   })
 
@@ -58,6 +65,16 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
       <mesh geometry={seedGeometry} scale={1.06}>
         <meshBasicMaterial color="#120a05" side={THREE.BackSide} toneMapped={false} />
       </mesh>
+      <sprite ref={glow} renderOrder={-1}>
+        <spriteMaterial
+          map={glowTexture}
+          color="#1fb058"
+          transparent
+          opacity={0.35}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </sprite>
     </mesh>
   )
 }
