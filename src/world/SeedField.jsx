@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import Seed from './Seed'
+import { useGardenStore } from '../lib/store'
+import { randomFieldPosition } from '../lib/randomFieldPosition'
 
-// Placeholder ideas so the field isn't empty while the capture
-// pipeline (step 2) isn't wired up yet. Real seeds will replace this
-// once voice capture -> Whisper -> Haiku is in place.
+// Placeholder ideas so the field isn't empty on a fresh visit — real
+// captured ideas (from useGardenStore) render alongside these.
 const PLACEHOLDER_IDEAS = [
   'Country Song',
   'Koi Pond',
@@ -17,30 +18,34 @@ const PLACEHOLDER_IDEAS = [
 
 const PALETTE = ['#fff1e0', '#ffe9d2', '#fff6ea', '#f5e2c8', '#fff0dc']
 
-export default function SeedField({ count = PLACEHOLDER_IDEAS.length }) {
-  const seeds = useMemo(() => {
-    return Array.from({ length: count }).map((_, i) => {
-      const radius = 4 + Math.random() * 3.5
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const position = [
-        radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi) * 0.5,
-        radius * Math.sin(phi) * Math.sin(theta) - 2,
-      ]
-      return {
-        id: i,
-        position,
-        title: PLACEHOLDER_IDEAS[i % PLACEHOLDER_IDEAS.length],
+export default function SeedField() {
+  const ideas = useGardenStore((s) => s.ideas)
+
+  // Positions are generated once (useMemo, no deps) so existing
+  // placeholder seeds never jump around as real ideas are added.
+  const placeholderSeeds = useMemo(
+    () =>
+      PLACEHOLDER_IDEAS.map((title, i) => ({
+        id: `placeholder-${i}`,
+        position: randomFieldPosition(),
+        title,
         color: PALETTE[i % PALETTE.length],
-      }
-    })
-  }, [count])
+      })),
+    []
+  )
 
   return (
     <>
-      {seeds.map((seed) => (
+      {placeholderSeeds.map((seed) => (
         <Seed key={seed.id} position={seed.position} title={seed.title} color={seed.color} />
+      ))}
+      {ideas.map((idea, i) => (
+        <Seed
+          key={idea.id}
+          position={idea.position}
+          title={idea.title}
+          color={PALETTE[i % PALETTE.length]}
+        />
       ))}
     </>
   )

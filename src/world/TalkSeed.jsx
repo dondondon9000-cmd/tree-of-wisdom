@@ -1,14 +1,13 @@
 import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGardenStore } from '../lib/store'
+import { beginCapture, endCapture } from '../lib/ideaPipeline'
 import { seedGeometry } from './seedGeometry'
 import SeedOutline from './SeedOutline'
 import { glowTexture } from './glowTexture'
 
 // The talk button. Not a microphone icon — a seed that breathes faster
 // and brighter than the rest to draw the eye, and flares when pressed.
-// Voice capture itself isn't wired up yet (step 2); this just gives the
-// press/hover/recording states something real to react to.
 const BASE_SIZE = 0.55
 
 export default function TalkSeed({ position = [0, 0, -2] }) {
@@ -17,8 +16,6 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
   const glow = useRef()
   const [hovered, setHovered] = useState(false)
   const isRecording = useGardenStore((s) => s.isRecording)
-  const startRecording = useGardenStore((s) => s.startRecording)
-  const stopRecording = useGardenStore((s) => s.stopRecording)
 
   useFrame(({ clock }, delta) => {
     const t = clock.getElapsedTime()
@@ -48,7 +45,7 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
       ref={mesh}
       position={position}
       geometry={seedGeometry}
-      onClick={() => (isRecording ? stopRecording() : startRecording())}
+      onClick={() => (isRecording ? endCapture() : beginCapture())}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
