@@ -9,7 +9,7 @@ export default function App() {
     <div className="app-root">
       <World />
       <div className={`listening-veil ${isRecording ? 'active' : ''}`} />
-      <div className="hint-text">{isRecording ? 'listening…' : 'speak an idea'}</div>
+      <div className="hint-text">{isRecording ? 'listening…' : 'touch the seed to grow an idea'}</div>
     </div>
   )
 }
