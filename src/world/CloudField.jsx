@@ -29,8 +29,8 @@ const CLOUD_COUNT = 10
 const RADIUS_MIN = 95
 const RADIUS_MAX = 140
 const MAX_CLOUD_SPAN = 13 // conservative estimate: max puff spread + puff diameter
-const SEPARATION_MARGIN = 1.4
-const MAX_PLACEMENT_TRIES = 80
+const SEPARATION_MARGIN = 1.5
+const MAX_PLACEMENT_TRIES = 120
 
 function angularSeparation(a, b) {
   const dot =
@@ -45,25 +45,46 @@ export default function CloudField() {
   const clouds = useMemo(() => {
     const placed = []
     for (let i = 0; i < CLOUD_COUNT; i++) {
-      let candidate
+      let candidate = null
+      let bestCandidate = null
+      let bestSlack = -Infinity
+
       for (let attempt = 0; attempt < MAX_PLACEMENT_TRIES; attempt++) {
         const scale = 1.6 + Math.random() * 1.2
         const radius = RADIUS_MIN + Math.random() * (RADIUS_MAX - RADIUS_MIN)
         const angularHalfSpan = (MAX_CLOUD_SPAN * scale) / 2 / radius
-        candidate = {
+        const attemptCandidate = {
           bearing: Math.random() * Math.PI * 2,
           elevation: 0.06 + Math.random() * 1.05,
           scale,
           radius,
           angularHalfSpan,
         }
-        const clear = placed.every(
-          (p) =>
-            angularSeparation(candidate, p) >
-            (candidate.angularHalfSpan + p.angularHalfSpan) * SEPARATION_MARGIN
-        )
-        if (clear) break
+
+        // How much clearance this attempt has past the required gap to
+        // its closest already-placed neighbor (negative = still overlapping).
+        let minSlack = Infinity
+        for (const p of placed) {
+          const required = (attemptCandidate.angularHalfSpan + p.angularHalfSpan) * SEPARATION_MARGIN
+          const slack = angularSeparation(attemptCandidate, p) - required
+          if (slack < minSlack) minSlack = slack
+        }
+
+        if (minSlack > bestSlack) {
+          bestSlack = minSlack
+          bestCandidate = attemptCandidate
+        }
+        if (minSlack > 0) {
+          candidate = attemptCandidate
+          break
+        }
       }
+
+      // Fall back to the least-bad attempt tried rather than blindly
+      // using whatever the last random roll happened to be — this is
+      // what previously let clouds slip through still overlapping when
+      // the sky got crowded.
+      candidate = candidate || bestCandidate
 
       placed.push({
         bearing: candidate.bearing,
