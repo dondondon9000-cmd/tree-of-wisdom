@@ -39,7 +39,7 @@ export default function World() {
         minDistance={3}
         maxDistance={10}
         minPolarAngle={0.35}
-        maxPolarAngle={Math.PI - 0.35}
+        maxPolarAngle={1.45}
         enableDamping
         dampingFactor={0.05}
         autoRotate
