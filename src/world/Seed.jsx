@@ -10,7 +10,7 @@ import { seedGeometry } from './seedGeometry'
 // pulse in scale and glow, even at rest. The title only resolves into
 // readable text once the camera is close, so the field reads as calm
 // glowing shapes from a distance and reveals itself as you approach.
-export default function Seed({ position, title, color = '#8b5a2b', radius = 0.45, driftRadius = 0.9 }) {
+export default function Seed({ position, title, color = '#fff1e0', radius = 0.45, driftRadius = 0.9 }) {
   const group = useRef()
   const mesh = useRef()
   const material = useRef()
@@ -47,7 +47,7 @@ export default function Seed({ position, title, color = '#8b5a2b', radius = 0.45
     const scale = radius * (1 + breath * 0.12)
     mesh.current.scale.setScalar(scale)
     if (material.current) {
-      material.current.emissiveIntensity = 1.0 + breath * 0.4
+      material.current.emissiveIntensity = 0.25 + breath * 0.12
     }
 
     if (label.current) {
@@ -64,10 +64,11 @@ export default function Seed({ position, title, color = '#8b5a2b', radius = 0.45
         <meshStandardMaterial
           ref={material}
           color={color}
+          vertexColors
           emissive="#ffb347"
-          emissiveIntensity={1.0}
-          roughness={0.55}
-          metalness={0.05}
+          emissiveIntensity={0.25}
+          roughness={0.38}
+          metalness={0.08}
           toneMapped={false}
         />
       </mesh>

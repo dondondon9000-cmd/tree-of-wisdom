@@ -30,8 +30,8 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
     mesh.current.scale.setScalar(BASE_SIZE * baseScale * recordScale * (1 + breath * 0.08))
 
     if (material.current) {
-      const baseIntensity = isRecording ? 3.2 : 2
-      material.current.emissiveIntensity = baseIntensity + breath * 0.5
+      const baseIntensity = isRecording ? 0.9 : 0.32
+      material.current.emissiveIntensity = baseIntensity + breath * 0.12
     }
   })
 
@@ -46,11 +46,12 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
     >
       <meshStandardMaterial
         ref={material}
-        color="#a9773f"
+        color="#fff4e6"
+        vertexColors
         emissive="#ffcf6b"
-        emissiveIntensity={2}
-        roughness={0.4}
-        metalness={0.05}
+        emissiveIntensity={0.32}
+        roughness={0.35}
+        metalness={0.08}
         toneMapped={false}
       />
     </mesh>
