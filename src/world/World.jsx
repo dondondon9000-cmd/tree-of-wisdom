@@ -12,9 +12,9 @@ export default function World() {
     >
       <color attach="background" args={['#05040c']} />
       <fog attach="fog" args={['#05040c', 8, 22]} />
-      <ambientLight intensity={0.35} />
-      <hemisphereLight args={['#fff1e0', '#150c05', 0.55]} />
-      <pointLight position={[0, 2, 4]} intensity={0.7} color="#ffe3b0" distance={20} decay={2} />
+      <ambientLight intensity={0.12} />
+      <hemisphereLight args={['#fff1e0', '#150c05', 0.22]} />
+      <pointLight position={[3, 3, 5]} intensity={1.5} color="#ffe3b0" distance={22} decay={2} />
 
       <Stars radius={60} depth={30} count={2500} factor={2} saturation={0} fade speed={0.4} />
 
