@@ -15,14 +15,47 @@ const profile = [
   [0.0, 0.52],
 ].map(([r, y]) => new THREE.Vector2(r, y))
 
-export const seedGeometry = new THREE.LatheGeometry(profile, 14)
+const RADIAL_SEGMENTS = 28
+export const seedGeometry = new THREE.LatheGeometry(profile, RADIAL_SEGMENTS)
+
+// Real seeds (coffee beans, apple pips, beans) usually have a seam or
+// crease running their length, not a perfectly round cross-section.
+// Carve a shallow groove into one longitude line by pulling vertices
+// near a fixed angle inward, then re-derive normals so the crease
+// actually catches light and shadow as the seed tumbles.
+const SEAM_ANGLE = 0
+const SEAM_WIDTH = 0.3
+const SEAM_DEPTH = 0.48
+
+function seamFactor(theta) {
+  let d = theta - SEAM_ANGLE
+  d = Math.atan2(Math.sin(d), Math.cos(d)) // wrap to [-PI, PI]
+  return Math.exp(-(d * d) / (2 * SEAM_WIDTH * SEAM_WIDTH))
+}
+
+const posAttr = seedGeometry.attributes.position
+const vertexAngle = new Float32Array(posAttr.count)
+
+for (let i = 0; i < posAttr.count; i++) {
+  const x = posAttr.getX(i)
+  const z = posAttr.getZ(i)
+  const r = Math.sqrt(x * x + z * z)
+  const theta = Math.atan2(z, x)
+  vertexAngle[i] = theta
+  if (r > 0.0001) {
+    const newR = r * (1 - SEAM_DEPTH * seamFactor(theta))
+    posAttr.setX(i, Math.cos(theta) * newR)
+    posAttr.setZ(i, Math.sin(theta) * newR)
+  }
+}
+posAttr.needsUpdate = true
 seedGeometry.computeVertexNormals()
 
 // Real seed coats aren't a flat color — they're darkest at the tips
 // and lighten through the fuller body, like an apple pip or watermelon
-// seed. Bake that as vertex colors so every instance shares one gradient
-// (the per-seed `color` tint in Seed/TalkSeed multiplies on top of this),
-// no texture required.
+// seed, and darker again along the seam crease. Bake that as vertex
+// colors so every instance shares one gradient (the per-seed `color`
+// tint in Seed/TalkSeed multiplies on top of this), no texture needed.
 const GRADIENT_STOPS = [
   { t: 0.0, c: [0x1c, 0x0f, 0x06] },
   { t: 0.2, c: [0x59, 0x33, 0x18] },
@@ -49,15 +82,15 @@ function gradientColorAt(t) {
   return [last[0] / 255, last[1] / 255, last[2] / 255]
 }
 
-const posAttr = seedGeometry.attributes.position
 const yMin = -0.55
 const yMax = 0.52
 const colors = new Float32Array(posAttr.count * 3)
 for (let i = 0; i < posAttr.count; i++) {
   const t = (posAttr.getY(i) - yMin) / (yMax - yMin)
   const [r, g, b] = gradientColorAt(t)
-  colors[i * 3] = r
-  colors[i * 3 + 1] = g
-  colors[i * 3 + 2] = b
+  const seamShade = 1 - 0.5 * seamFactor(vertexAngle[i])
+  colors[i * 3] = r * seamShade
+  colors[i * 3 + 1] = g * seamShade
+  colors[i * 3 + 2] = b * seamShade
 }
 seedGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))

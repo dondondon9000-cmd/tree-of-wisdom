@@ -26,6 +26,8 @@ export default function World() {
         enableZoom={true}
         minDistance={3}
         maxDistance={10}
+        minPolarAngle={0.35}
+        maxPolarAngle={Math.PI - 0.35}
         enableDamping
         dampingFactor={0.05}
         autoRotate
