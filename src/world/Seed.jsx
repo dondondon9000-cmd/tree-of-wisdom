@@ -1,8 +1,10 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
+import * as THREE from 'three'
 import { driftOffset } from '../lib/noise'
 import { seedGeometry } from './seedGeometry'
+import Sprout from './Sprout'
 
 // A single floating idea. Drifts on a noise-based flow field (never a
 // straight line or constant speed), tumbles slowly so its tapered seed
@@ -20,6 +22,7 @@ export default function Seed({ position, title, color = '#fff1e0', radius = 0.45
   const breathPhase = useMemo(() => Math.random() * Math.PI * 2, [])
   const breathSpeed = useMemo(() => 0.5 + Math.random() * 0.3, [])
   const driftSpeed = useMemo(() => 0.03 + Math.random() * 0.02, [])
+  const sproutStage = useMemo(() => Math.random(), [])
   const spin = useMemo(
     () => [
       (Math.random() - 0.5) * 0.15,
@@ -71,6 +74,12 @@ export default function Seed({ position, title, color = '#fff1e0', radius = 0.45
           metalness={0.08}
           toneMapped={false}
         />
+        <mesh geometry={seedGeometry} scale={1.06}>
+          <meshBasicMaterial color="#120a05" side={THREE.BackSide} toneMapped={false} />
+        </mesh>
+        <group position={[0, 0.46, 0]}>
+          <Sprout stage={sproutStage} />
+        </group>
       </mesh>
       {title && (
         <Text

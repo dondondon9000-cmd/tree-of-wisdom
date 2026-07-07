@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { useGardenStore } from '../lib/store'
 import { seedGeometry } from './seedGeometry'
 
@@ -54,6 +55,9 @@ export default function TalkSeed({ position = [0, 0, -2] }) {
         metalness={0.08}
         toneMapped={false}
       />
+      <mesh geometry={seedGeometry} scale={1.06}>
+        <meshBasicMaterial color="#120a05" side={THREE.BackSide} toneMapped={false} />
+      </mesh>
     </mesh>
   )
 }
