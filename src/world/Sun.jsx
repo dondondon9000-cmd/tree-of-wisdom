@@ -15,7 +15,11 @@ import SeedOutline from './SeedOutline'
 // ray-burst give it real shape; the soft glow sprite behind it is now
 // just a subtle accent rather than the whole visual — a plain bright
 // glow sprite with no defined edge read as an undefined "faded" blob.
-const POSITION = [26, 34, -55]
+// Elevation kept low (~14° above the horizon) — the camera's polar-angle
+// clamp (see World.jsx, tuned to stop it dipping below the ground) means
+// it can only ever tilt a bit above level, so anything much higher than
+// this sits above the top of the frame no matter how you orbit.
+const POSITION = [30, 18, -68]
 
 export default function Sun() {
   const rays = useRef()

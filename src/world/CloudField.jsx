@@ -1,7 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { buildCloudGeometry } from './cloudGeometry'
-import SeedOutline from './SeedOutline'
 
 // Cloud clusters scattered all through the sky. Each is a real bumpy
 // 3D shape (buildCloudGeometry) with a baked top-lit gradient and a
@@ -11,38 +11,58 @@ import SeedOutline from './SeedOutline'
 //
 // Positioned with proper spherical coordinates (radius, elevation,
 // bearing) so every cloud's true distance from the origin is exactly
-// `radius`, capped well under the sky dome's radius — a previous
+// `radius`, capped well under the sky dome's radius (see GardenSky.jsx,
+// bumped to 160 to give room to push clouds further out) — a previous
 // version's math could push clouds past the dome and hide them
 // completely behind it. Drift rotates the bearing angle rather than
 // translating position directly, so that distance-from-origin
 // guarantee holds forever regardless of session length.
-const CLOUD_COUNT = 22
-const RADIUS_MIN = 45
-const RADIUS_MAX = 75
+//
+// Placement rejects candidates that land too close (angularly) to an
+// already-placed cloud, so they read as scattered across the sky
+// instead of clumping into an overlapping jumble.
+const CLOUD_COUNT = 15
+const RADIUS_MIN = 95
+const RADIUS_MAX = 140
+const MIN_ANGULAR_SEP = 0.34
+const MAX_PLACEMENT_TRIES = 40
+
+function angularSeparation(a, b) {
+  const dot =
+    Math.cos(a.elevation) * Math.cos(a.bearing) * Math.cos(b.elevation) * Math.cos(b.bearing) +
+    Math.sin(a.elevation) * Math.sin(b.elevation) +
+    Math.cos(a.elevation) * Math.sin(a.bearing) * Math.cos(b.elevation) * Math.sin(b.bearing)
+  return Math.acos(Math.min(1, Math.max(-1, dot)))
+}
 
 export default function CloudField() {
   const groupRefs = useRef([])
-  const clouds = useMemo(
-    () =>
-      Array.from({ length: CLOUD_COUNT }).map(() => {
-        const bearing = Math.random() * Math.PI * 2
-        const elevation = 0.06 + Math.random() * 1.05
-        const radius = RADIUS_MIN + Math.random() * (RADIUS_MAX - RADIUS_MIN)
-        const horizontal = radius * Math.cos(elevation)
-        const y = radius * Math.sin(elevation)
-
-        return {
-          bearing,
-          horizontal,
-          y,
-          scale: 1.3 + Math.random() * 1.5,
-          yaw: Math.random() * Math.PI * 2,
-          driftSpeed: 0.0015 + Math.random() * 0.0035,
-          geometry: buildCloudGeometry(),
+  const clouds = useMemo(() => {
+    const placed = []
+    for (let i = 0; i < CLOUD_COUNT; i++) {
+      let candidate
+      for (let attempt = 0; attempt < MAX_PLACEMENT_TRIES; attempt++) {
+        candidate = {
+          bearing: Math.random() * Math.PI * 2,
+          elevation: 0.06 + Math.random() * 1.05,
         }
-      }),
-    []
-  )
+        if (placed.every((p) => angularSeparation(candidate, p) > MIN_ANGULAR_SEP)) break
+      }
+
+      const radius = RADIUS_MIN + Math.random() * (RADIUS_MAX - RADIUS_MIN)
+      placed.push({
+        bearing: candidate.bearing,
+        elevation: candidate.elevation,
+        horizontal: radius * Math.cos(candidate.elevation),
+        y: radius * Math.sin(candidate.elevation),
+        scale: 1.8 + Math.random() * 1.6,
+        yaw: Math.random() * Math.PI * 2,
+        driftSpeed: 0.0015 + Math.random() * 0.0035,
+        ...buildCloudGeometry(),
+      })
+    }
+    return placed
+  }, [])
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime()
@@ -60,7 +80,9 @@ export default function CloudField() {
         <group key={i} ref={(el) => (groupRefs.current[i] = el)} rotation={[0, c.yaw, 0]} scale={c.scale}>
           <mesh geometry={c.geometry}>
             <meshBasicMaterial vertexColors fog={false} toneMapped={false} />
-            <SeedOutline geometry={c.geometry} scale={1.04} />
+          </mesh>
+          <mesh geometry={c.outline}>
+            <meshBasicMaterial color="#120a05" side={THREE.BackSide} fog={false} toneMapped={false} />
           </mesh>
         </group>
       ))}
