@@ -15,7 +15,7 @@ const PLACEHOLDER_IDEAS = [
   'Weekend Trip',
 ]
 
-const PALETTE = ['#ffd27f', '#ffcf9e', '#ffe0b3', '#f8c88a']
+const PALETTE = ['#8b5a2b', '#7c4a24', '#9c6b3e', '#6e4423', '#8f6a3f']
 
 export default function SeedField({ count = PLACEHOLDER_IDEAS.length }) {
   const seeds = useMemo(() => {

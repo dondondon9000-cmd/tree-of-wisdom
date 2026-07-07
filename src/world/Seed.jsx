@@ -2,13 +2,15 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import { driftOffset } from '../lib/noise'
+import { seedGeometry } from './seedGeometry'
 
 // A single floating idea. Drifts on a noise-based flow field (never a
-// straight line or constant speed) and softly "breathes" — a slow
+// straight line or constant speed), tumbles slowly so its tapered seed
+// shape actually reads as it moves, and softly "breathes" — a slow
 // pulse in scale and glow, even at rest. The title only resolves into
 // readable text once the camera is close, so the field reads as calm
-// glowing orbs from a distance and reveals itself as you approach.
-export default function Seed({ position, title, color = '#ffd27f', radius = 0.28, driftRadius = 0.9 }) {
+// glowing shapes from a distance and reveals itself as you approach.
+export default function Seed({ position, title, color = '#8b5a2b', radius = 0.45, driftRadius = 0.9 }) {
   const group = useRef()
   const mesh = useRef()
   const material = useRef()
@@ -18,8 +20,16 @@ export default function Seed({ position, title, color = '#ffd27f', radius = 0.28
   const breathPhase = useMemo(() => Math.random() * Math.PI * 2, [])
   const breathSpeed = useMemo(() => 0.5 + Math.random() * 0.3, [])
   const driftSpeed = useMemo(() => 0.03 + Math.random() * 0.02, [])
+  const spin = useMemo(
+    () => [
+      (Math.random() - 0.5) * 0.15,
+      (Math.random() - 0.5) * 0.15,
+      (Math.random() - 0.5) * 0.1,
+    ],
+    []
+  )
 
-  useFrame(({ clock, camera }) => {
+  useFrame(({ clock, camera }, delta) => {
     const t = clock.getElapsedTime()
 
     const [dx, dy, dz] = driftOffset(noiseSeed, t, driftSpeed)
@@ -29,11 +39,15 @@ export default function Seed({ position, title, color = '#ffd27f', radius = 0.28
       position[2] + dz * driftRadius
     )
 
+    mesh.current.rotation.x += spin[0] * delta
+    mesh.current.rotation.y += spin[1] * delta
+    mesh.current.rotation.z += spin[2] * delta
+
     const breath = Math.sin(t * breathSpeed + breathPhase)
-    const scale = 1 + breath * 0.12
+    const scale = radius * (1 + breath * 0.12)
     mesh.current.scale.setScalar(scale)
     if (material.current) {
-      material.current.emissiveIntensity = 1.6 + breath * 0.6
+      material.current.emissiveIntensity = 1.0 + breath * 0.4
     }
 
     if (label.current) {
@@ -46,14 +60,14 @@ export default function Seed({ position, title, color = '#ffd27f', radius = 0.28
 
   return (
     <group ref={group}>
-      <mesh ref={mesh}>
-        <sphereGeometry args={[radius, 24, 24]} />
+      <mesh ref={mesh} geometry={seedGeometry}>
         <meshStandardMaterial
           ref={material}
           color={color}
-          emissive={color}
-          emissiveIntensity={1.6}
-          roughness={0.3}
+          emissive="#ffb347"
+          emissiveIntensity={1.0}
+          roughness={0.55}
+          metalness={0.05}
           toneMapped={false}
         />
       </mesh>
@@ -61,7 +75,7 @@ export default function Seed({ position, title, color = '#ffd27f', radius = 0.28
         <Text
           ref={label}
           font="/fonts/manrope-400.woff"
-          position={[0, radius + 0.35, 0]}
+          position={[0, radius * 0.7 + 0.35, 0]}
           fontSize={0.22}
           color="#fff6e6"
           anchorX="center"
