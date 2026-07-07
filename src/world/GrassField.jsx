@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { grassPatchTypes } from './grassPatchGeometry'
+import { GROUND_CENTER } from './groundLevel'
 
 // A field of swaying grass patches on the garden ground. Each instance
 // is a whole pre-merged clump of blades, not a single blade — far
@@ -12,7 +13,6 @@ import { grassPatchTypes } from './grassPatchGeometry'
 // with a spatial phase offset so the sway ripples across the lawn
 // like a real gust, rather than every blade moving independently.
 const COUNT_PER_TYPE = 110
-const GROUND_CENTER = [0, -4.5, -6]
 const FIELD_RADIUS = 18
 
 function PatchGroup({ geometry, count, seedOffset }) {

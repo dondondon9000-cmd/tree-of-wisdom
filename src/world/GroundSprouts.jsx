@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import Sprout from './Sprout'
+import { GROUND_CENTER } from './groundLevel'
 
 // Scattered spots on the lawn that already look planted and sprouting
 // — a preview of what "planting an idea" will eventually look like,
@@ -7,7 +8,6 @@ import Sprout from './Sprout'
 // nubs on the floating seeds, since these read as ideas that already
 // took root.
 const COUNT = 26
-const GROUND_CENTER = [0, -4.5, -6]
 const RADIUS = 12
 
 export default function GroundSprouts() {

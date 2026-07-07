@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import GardenSky from './GardenSky'
+import Ground from './Ground'
 import WindPetals from './WindPetals'
 import GrassField from './GrassField'
 import GroundSprouts from './GroundSprouts'
@@ -22,10 +23,7 @@ export default function World() {
       <pointLight position={[0, -1.5, -8]} intensity={1.8} color="#eaf0c8" distance={24} decay={2} />
 
       <GardenSky />
-      <mesh position={[0, -4.5, -6]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[42, 32]} />
-        <meshStandardMaterial color="#3d5a2c" roughness={1} />
-      </mesh>
+      <Ground />
       <GrassField />
       <GroundSprouts />
       <WindPetals />
@@ -39,7 +37,7 @@ export default function World() {
         enablePan={false}
         enableZoom={true}
         minDistance={3}
-        maxDistance={10}
+        maxDistance={15}
         minPolarAngle={0.35}
         maxPolarAngle={1.45}
         enableDamping

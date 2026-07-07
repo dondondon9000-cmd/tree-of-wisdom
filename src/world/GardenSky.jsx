@@ -1,32 +1,27 @@
-import { useMemo } from 'react'
 import * as THREE from 'three'
+import { bakeVertexGradient, stopsGradient } from './vertexGradient'
 
 // A soft hand-rolled gradient sky dome (pale dusk lavender at the
 // zenith, warm peach at the horizon) instead of a physically-based sky
 // sim — cheaper, and gives direct control over the serene/warm mood.
-const TOP_COLOR = new THREE.Color('#aebfd8')
-const HORIZON_COLOR = new THREE.Color('#f4d9bd')
 const RADIUS = 90
 
-export default function GardenSky() {
-  const geometry = useMemo(() => {
-    const geo = new THREE.SphereGeometry(RADIUS, 24, 16)
-    const pos = geo.attributes.position
-    const colors = new Float32Array(pos.count * 3)
-    for (let i = 0; i < pos.count; i++) {
-      const y = pos.getY(i)
-      const t = THREE.MathUtils.clamp((y + RADIUS * 0.35) / (RADIUS * 0.9), 0, 1)
-      const c = HORIZON_COLOR.clone().lerp(TOP_COLOR, t)
-      colors[i * 3] = c.r
-      colors[i * 3 + 1] = c.g
-      colors[i * 3 + 2] = c.b
-    }
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    return geo
-  }, [])
+const skyGeometry = new THREE.SphereGeometry(RADIUS, 24, 16)
 
+const gradientColorAt = stopsGradient([
+  { t: 0, color: new THREE.Color('#f4d9bd') },
+  { t: 1, color: new THREE.Color('#aebfd8') },
+])
+
+bakeVertexGradient(
+  skyGeometry,
+  (attr, i) => THREE.MathUtils.clamp((attr.getY(i) + RADIUS * 0.35) / (RADIUS * 0.9), 0, 1),
+  (t) => gradientColorAt(t)
+)
+
+export default function GardenSky() {
   return (
-    <mesh geometry={geometry}>
+    <mesh geometry={skyGeometry}>
       <meshBasicMaterial vertexColors side={THREE.BackSide} fog={false} toneMapped={false} />
     </mesh>
   )

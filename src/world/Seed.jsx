@@ -1,9 +1,9 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
-import * as THREE from 'three'
 import { driftOffset } from '../lib/noise'
 import { seedGeometry } from './seedGeometry'
+import SeedOutline from './SeedOutline'
 import Sprout from './Sprout'
 
 // A single floating idea. Drifts on a noise-based flow field (never a
@@ -74,9 +74,7 @@ export default function Seed({ position, title, color = '#fff1e0', radius = 0.45
           metalness={0.08}
           toneMapped={false}
         />
-        <mesh geometry={seedGeometry} scale={1.06}>
-          <meshBasicMaterial color="#120a05" side={THREE.BackSide} toneMapped={false} />
-        </mesh>
+        <SeedOutline geometry={seedGeometry} />
         <group position={[0, 0.46, 0]}>
           <Sprout stage={sproutStage} />
         </group>
