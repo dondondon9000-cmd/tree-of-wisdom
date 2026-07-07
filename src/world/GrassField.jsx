@@ -1,46 +1,49 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { grassGeometry } from './grassGeometry'
+import { grassPatchTypes } from './grassPatchGeometry'
 
-// A field of individually-swaying grass blades on the garden ground.
-// Each blade leans in the same cross-wind direction as the petals, but
-// with a spatial phase offset so the sway ripples across the lawn like
-// a real gust passing through, rather than every blade moving in lockstep.
-const COUNT = 900
+// A field of swaying grass patches on the garden ground. Each instance
+// is a whole pre-merged clump of blades, not a single blade — far
+// fewer per-frame updates for denser coverage. Only three clump
+// geometries exist (grassPatchTypes); this scatters many instances of
+// each across the field, so the scene only ever tracks three shapes
+// no matter how much ground is covered. Each clump sways as one patch,
+// with a spatial phase offset so the sway ripples across the lawn
+// like a real gust, rather than every blade moving independently.
+const COUNT_PER_TYPE = 110
 const GROUND_CENTER = [0, -4.5, -6]
-const FIELD_RADIUS = 15
+const FIELD_RADIUS = 18
 
-export default function GrassField() {
+function PatchGroup({ geometry, count, seedOffset }) {
   const mesh = useRef()
   const dummy = useMemo(() => new THREE.Object3D(), [])
-  const blades = useMemo(
+  const patches = useMemo(
     () =>
-      Array.from({ length: COUNT }).map(() => {
+      Array.from({ length: count }).map(() => {
         const r = Math.sqrt(Math.random()) * FIELD_RADIUS
         const angle = Math.random() * Math.PI * 2
         return {
           x: GROUND_CENTER[0] + Math.cos(angle) * r,
           z: GROUND_CENTER[2] + Math.sin(angle) * r,
           yaw: Math.random() * Math.PI * 2,
-          height: 0.7 + Math.random() * 0.8,
-          width: 0.8 + Math.random() * 0.5,
+          scale: 1.3 + Math.random() * 1.4,
           phase: Math.random() * Math.PI * 2,
-          restLean: (Math.random() - 0.5) * 0.15,
+          restLean: (Math.random() - 0.5) * 0.12,
         }
       }),
-    []
+    [count]
   )
 
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    blades.forEach((b, i) => {
-      const ripple = Math.sin(t * 1.1 + b.x * 0.35 + b.z * 0.25 + b.phase)
-      const sway = b.restLean + ripple * 0.22
+    const t = clock.getElapsedTime() + seedOffset
+    patches.forEach((p, i) => {
+      const ripple = Math.sin(t * 1.1 + p.x * 0.35 + p.z * 0.25 + p.phase)
+      const sway = p.restLean + ripple * 0.18
 
-      dummy.position.set(b.x, GROUND_CENTER[1], b.z)
-      dummy.rotation.set(0, b.yaw, sway)
-      dummy.scale.set(b.width, b.height, 1)
+      dummy.position.set(p.x, GROUND_CENTER[1], p.z)
+      dummy.rotation.set(0, p.yaw, sway)
+      dummy.scale.setScalar(p.scale)
       dummy.updateMatrix()
       mesh.current.setMatrixAt(i, dummy.matrix)
     })
@@ -48,8 +51,18 @@ export default function GrassField() {
   })
 
   return (
-    <instancedMesh ref={mesh} args={[grassGeometry, null, COUNT]}>
+    <instancedMesh ref={mesh} args={[geometry, null, count]}>
       <meshStandardMaterial vertexColors roughness={0.9} side={THREE.DoubleSide} />
     </instancedMesh>
+  )
+}
+
+export default function GrassField() {
+  return (
+    <>
+      {grassPatchTypes.map((geometry, i) => (
+        <PatchGroup key={i} geometry={geometry} count={COUNT_PER_TYPE} seedOffset={i * 12.4} />
+      ))}
+    </>
   )
 }

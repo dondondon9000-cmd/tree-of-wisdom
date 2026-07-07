@@ -4,6 +4,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import GardenSky from './GardenSky'
 import WindPetals from './WindPetals'
 import GrassField from './GrassField'
+import GroundSprouts from './GroundSprouts'
 import SeedField from './SeedField'
 import TalkSeed from './TalkSeed'
 import CameraHUD from './CameraHUD'
@@ -26,6 +27,7 @@ export default function World() {
         <meshStandardMaterial color="#3d5a2c" roughness={1} />
       </mesh>
       <GrassField />
+      <GroundSprouts />
       <WindPetals />
 
       <SeedField />
