@@ -2,6 +2,8 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import GardenSky from './GardenSky'
+import Sun from './Sun'
+import CloudField from './CloudField'
 import Ground from './Ground'
 import WindPetals from './WindPetals'
 import GrassField from './GrassField'
@@ -23,6 +25,8 @@ export default function World() {
       <pointLight position={[0, -1.5, -8]} intensity={1.8} color="#eaf0c8" distance={24} decay={2} />
 
       <GardenSky />
+      <Sun />
+      <CloudField />
       <Ground />
       <GrassField />
       <GroundSprouts />
