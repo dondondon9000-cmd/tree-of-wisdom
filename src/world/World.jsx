@@ -1,6 +1,8 @@
 import { Canvas } from '@react-three/fiber'
-import { Stars, OrbitControls } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
+import GardenSky from './GardenSky'
+import WindPetals from './WindPetals'
 import SeedField from './SeedField'
 import TalkSeed from './TalkSeed'
 
@@ -10,13 +12,17 @@ export default function World() {
       camera={{ position: [0, 0.5, 6], fov: 55 }}
       gl={{ antialias: true }}
     >
-      <color attach="background" args={['#05040c']} />
-      <fog attach="fog" args={['#05040c', 8, 22]} />
-      <ambientLight intensity={0.12} />
-      <hemisphereLight args={['#fff1e0', '#150c05', 0.22]} />
-      <pointLight position={[3, 3, 5]} intensity={1.5} color="#ffe3b0" distance={22} decay={2} />
+      <fog attach="fog" args={['#e9cba9', 10, 42]} />
+      <ambientLight intensity={0.35} />
+      <hemisphereLight args={['#aebfd8', '#4a5a3a', 0.45]} />
+      <pointLight position={[3, 3, 5]} intensity={1.4} color="#ffe3b0" distance={26} decay={2} />
 
-      <Stars radius={60} depth={30} count={2500} factor={2} saturation={0} fade speed={0.4} />
+      <GardenSky />
+      <mesh position={[0, -6, -6]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[42, 32]} />
+        <meshStandardMaterial color="#4a5a3a" roughness={1} />
+      </mesh>
+      <WindPetals />
 
       <SeedField />
       <TalkSeed position={[0, 0, -1.5]} />
@@ -35,7 +41,7 @@ export default function World() {
       />
 
       <EffectComposer>
-        <Bloom intensity={0.7} luminanceThreshold={0.4} luminanceSmoothing={0.6} mipmapBlur />
+        <Bloom intensity={0.6} luminanceThreshold={0.4} luminanceSmoothing={0.6} mipmapBlur />
       </EffectComposer>
     </Canvas>
   )
