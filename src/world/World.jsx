@@ -16,7 +16,7 @@ export default function World() {
       camera={{ position: [0, 0.5, 6], fov: 55 }}
       gl={{ antialias: true }}
     >
-      <fog attach="fog" args={['#e9cba9', 10, 42]} />
+      <fog attach="fog" args={['#e9cba9', 22, 85]} />
       <ambientLight intensity={0.45} />
       <hemisphereLight args={['#aebfd8', '#3d5a2c', 0.45]} />
       <pointLight position={[3, 3, 5]} intensity={1.4} color="#ffe3b0" distance={26} decay={2} />
