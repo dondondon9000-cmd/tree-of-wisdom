@@ -6,6 +6,7 @@ import WindPetals from './WindPetals'
 import GrassField from './GrassField'
 import SeedField from './SeedField'
 import TalkSeed from './TalkSeed'
+import CameraHUD from './CameraHUD'
 
 export default function World() {
   return (
@@ -28,7 +29,9 @@ export default function World() {
       <WindPetals />
 
       <SeedField />
-      <TalkSeed position={[0, 0, -1.5]} />
+      <CameraHUD>
+        <TalkSeed position={[0, -1.5, -4]} />
+      </CameraHUD>
 
       <OrbitControls
         enablePan={false}

@@ -1,6 +1,7 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { petalGeometry } from './petalGeometry'
 
 // Cherry-blossom-like petals drifting on a steady cross-wind, with a
 // gentle fall, sway, and roll — the "wind blowing things around" that
@@ -15,6 +16,8 @@ const COUNT = 46
 const BOUNDS_X = 14
 const RESET_Y = 9
 const FLOOR_Y = -6
+
+const TINT_PALETTE = ['#ffc7dc', '#ff9dbf', '#ffe1ec', '#f7b8d8', '#ffd0e6', '#e89bc4']
 
 export default function WindPetals() {
   const mesh = useRef()
@@ -35,6 +38,15 @@ export default function WindPetals() {
       })),
     []
   )
+
+  useEffect(() => {
+    const color = new THREE.Color()
+    for (let i = 0; i < COUNT; i++) {
+      color.set(TINT_PALETTE[i % TINT_PALETTE.length])
+      mesh.current.setColorAt(i, color)
+    }
+    mesh.current.instanceColor.needsUpdate = true
+  }, [])
 
   useFrame(({ clock, camera }, delta) => {
     const t = clock.getElapsedTime()
@@ -59,16 +71,15 @@ export default function WindPetals() {
   })
 
   return (
-    <instancedMesh ref={mesh} args={[null, null, COUNT]}>
-      <circleGeometry args={[0.5, 7]} />
+    <instancedMesh ref={mesh} args={[petalGeometry, null, COUNT]}>
       <meshStandardMaterial
-        color="#f6b9cf"
-        emissive="#f6b9cf"
-        emissiveIntensity={0.15}
+        vertexColors
+        emissive="#ff9dbf"
+        emissiveIntensity={0.12}
         side={THREE.DoubleSide}
-        roughness={0.6}
+        roughness={0.55}
         transparent
-        opacity={0.9}
+        opacity={0.92}
       />
     </instancedMesh>
   )

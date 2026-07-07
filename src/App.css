@@ -27,11 +27,17 @@
   right: 0;
   bottom: 8%;
   text-align: center;
-  color: rgba(255, 246, 230, 0.55);
-  font-size: 0.95rem;
+  color: #0a0d0a;
+  font-weight: 600;
+  font-size: 1rem;
   letter-spacing: 0.12em;
   text-transform: lowercase;
   pointer-events: none;
   font-family: 'Segoe UI', system-ui, sans-serif;
-  transition: color 0.8s ease;
+  text-shadow:
+    0 0 3px rgba(111, 224, 138, 0.95),
+    0 0 8px rgba(93, 224, 138, 0.8),
+    0 0 16px rgba(75, 224, 130, 0.55);
+  -webkit-text-stroke: 0.4px rgba(111, 224, 138, 0.7);
+  transition: text-shadow 0.8s ease;
 }
