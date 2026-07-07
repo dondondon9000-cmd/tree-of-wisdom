@@ -12,10 +12,18 @@ import { petalGeometry } from './petalGeometry'
 // axis) — a fully random 3-axis tumble spends most of its time edge-on
 // to the camera, which reads as colorless grey slivers instead of
 // petals.
-const COUNT = 46
-const BOUNDS_X = 14
-const RESET_Y = 9
+//
+// Bounds are large relative to the seed/grass field on purpose — the
+// camera can orbit and zoom out much further than the old, much
+// smaller box covered, and petals confined to a small box near the
+// origin read as "stuck" rather than actually filling the environment.
+// Z drifts and wraps the same way X does, instead of staying fixed —
+// otherwise every petal sits at one unmoving depth forever.
+const COUNT = 90
+const BOUNDS_X = 30
+const BOUNDS_Z = 30
 const FLOOR_Y = -6
+const RESET_Y = 18
 
 const TINT_PALETTE = ['#ffc7dc', '#ff9dbf', '#ffe1ec', '#f7b8d8', '#ffd0e6', '#e89bc4']
 
@@ -26,9 +34,10 @@ export default function WindPetals() {
     () =>
       Array.from({ length: COUNT }).map(() => ({
         x: (Math.random() - 0.5) * BOUNDS_X * 2,
-        y: Math.random() * 15 - 6,
-        z: (Math.random() - 0.5) * 20 - 3,
-        speed: 0.35 + Math.random() * 0.45,
+        y: FLOOR_Y + Math.random() * (RESET_Y - FLOOR_Y),
+        z: (Math.random() - 0.5) * BOUNDS_Z * 2,
+        speedX: 0.35 + Math.random() * 0.45,
+        speedZ: (Math.random() - 0.5) * 0.35,
         fall: 0.12 + Math.random() * 0.14,
         swayPhase: Math.random() * Math.PI * 2,
         swaySpeed: 0.5 + Math.random() * 0.4,
@@ -51,11 +60,15 @@ export default function WindPetals() {
   useFrame(({ clock, camera }, delta) => {
     const t = clock.getElapsedTime()
     petals.forEach((p, i) => {
-      p.x += p.speed * delta
+      p.x += p.speedX * delta
+      p.z += p.speedZ * delta
       p.y -= p.fall * delta
       p.roll += p.rollSpeed * delta
 
       if (p.x > BOUNDS_X) p.x = -BOUNDS_X
+      if (p.x < -BOUNDS_X) p.x = BOUNDS_X
+      if (p.z > BOUNDS_Z) p.z = -BOUNDS_Z
+      if (p.z < -BOUNDS_Z) p.z = BOUNDS_Z
       if (p.y < FLOOR_Y) p.y = RESET_Y
 
       const sway = Math.sin(t * p.swaySpeed + p.swayPhase) * 0.5
