@@ -20,12 +20,17 @@ import { buildCloudGeometry } from './cloudGeometry'
 //
 // Placement rejects candidates that land too close (angularly) to an
 // already-placed cloud, so they read as scattered across the sky
-// instead of clumping into an overlapping jumble.
-const CLOUD_COUNT = 15
+// instead of clumping into an overlapping jumble. The required gap is
+// based on each cloud's own on-screen angular size (footprint * scale
+// / distance) rather than a flat constant — a fixed gap was nowhere
+// near enough for the biggest, closest clouds, which can span a wide
+// angle on their own and still "overlap" a neighbor a fixed distance away.
+const CLOUD_COUNT = 10
 const RADIUS_MIN = 95
 const RADIUS_MAX = 140
-const MIN_ANGULAR_SEP = 0.34
-const MAX_PLACEMENT_TRIES = 40
+const MAX_CLOUD_SPAN = 13 // conservative estimate: max puff spread + puff diameter
+const SEPARATION_MARGIN = 1.4
+const MAX_PLACEMENT_TRIES = 80
 
 function angularSeparation(a, b) {
   const dot =
@@ -42,20 +47,31 @@ export default function CloudField() {
     for (let i = 0; i < CLOUD_COUNT; i++) {
       let candidate
       for (let attempt = 0; attempt < MAX_PLACEMENT_TRIES; attempt++) {
+        const scale = 1.6 + Math.random() * 1.2
+        const radius = RADIUS_MIN + Math.random() * (RADIUS_MAX - RADIUS_MIN)
+        const angularHalfSpan = (MAX_CLOUD_SPAN * scale) / 2 / radius
         candidate = {
           bearing: Math.random() * Math.PI * 2,
           elevation: 0.06 + Math.random() * 1.05,
+          scale,
+          radius,
+          angularHalfSpan,
         }
-        if (placed.every((p) => angularSeparation(candidate, p) > MIN_ANGULAR_SEP)) break
+        const clear = placed.every(
+          (p) =>
+            angularSeparation(candidate, p) >
+            (candidate.angularHalfSpan + p.angularHalfSpan) * SEPARATION_MARGIN
+        )
+        if (clear) break
       }
 
-      const radius = RADIUS_MIN + Math.random() * (RADIUS_MAX - RADIUS_MIN)
       placed.push({
         bearing: candidate.bearing,
         elevation: candidate.elevation,
-        horizontal: radius * Math.cos(candidate.elevation),
-        y: radius * Math.sin(candidate.elevation),
-        scale: 1.8 + Math.random() * 1.6,
+        angularHalfSpan: candidate.angularHalfSpan,
+        horizontal: candidate.radius * Math.cos(candidate.elevation),
+        y: candidate.radius * Math.sin(candidate.elevation),
+        scale: candidate.scale,
         yaw: Math.random() * Math.PI * 2,
         driftSpeed: 0.0015 + Math.random() * 0.0035,
         ...buildCloudGeometry(),
