@@ -108,9 +108,12 @@ function buildBlossoms(foliageClumps) {
   for (const clump of foliageClumps) {
     clump.geometry.computeBoundingSphere()
     const { center, radius } = clump.geometry.boundingSphere
-    const blossomCount = 3 + Math.floor(Math.random() * 3)
+    const blossomCount = 9 + Math.floor(Math.random() * 5)
     for (let i = 0; i < blossomCount; i++) {
-      const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.6 + 0.2, Math.random() - 0.5).normalize()
+      // Full sphere, not just the upper hemisphere — a y range that
+      // stayed positive here once meant every blossom landed on the
+      // top of the clump only, leaving the whole underside bare.
+      const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
       const pos = center.clone().addScaledVector(dir, radius * 0.85)
       const sphere = new THREE.SphereGeometry(0.035 + Math.random() * 0.02, 6, 5)
       sphere.translate(pos.x, pos.y, pos.z)
