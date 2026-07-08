@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import { driftOffset } from '../lib/noise'
+import { useGardenStore } from '../lib/store'
 import { seedGeometry } from './seedGeometry'
 import SeedOutline from './SeedOutline'
 import Sprout from './Sprout'
@@ -64,7 +65,14 @@ export default function Seed({ position, title, color = '#fff1e0', radius = 0.45
 
   return (
     <group ref={group}>
-      <mesh ref={mesh} geometry={seedGeometry}>
+      <mesh
+        ref={mesh}
+        geometry={seedGeometry}
+        onClick={(e) => {
+          e.stopPropagation()
+          useGardenStore.getState().openSearch()
+        }}
+      >
         <meshStandardMaterial
           ref={material}
           color={color}
