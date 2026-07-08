@@ -5,18 +5,20 @@ import BonsaiTree from './BonsaiTree'
 // Planted ideas arranged in a ring around the center, evenly spaced —
 // simplest layout that scales reasonably as more get planted, and
 // keeps every bonsai visible and walkable-around rather than stacked
-// in a grid.
-const RADIUS = 5.5
+// in a grid. Exported so the stone path (GardenPath.jsx) can line up
+// with exactly where the bonsai actually sit.
+export const BONSAI_RING_RADIUS = 5.5
 
 export default function BonsaiField() {
   const plantedIdeas = useGardenStore((s) => s.plantedIdeas)
   const justPlantedId = useGardenStore((s) => s.justPlantedId)
+  const openWorkspace = useGardenStore((s) => s.openWorkspace)
 
   const positions = useMemo(
     () =>
       plantedIdeas.map((_, i) => {
         const angle = (i / plantedIdeas.length) * Math.PI * 2
-        return [Math.cos(angle) * RADIUS, 0, Math.sin(angle) * RADIUS]
+        return [Math.cos(angle) * BONSAI_RING_RADIUS, 0, Math.sin(angle) * BONSAI_RING_RADIUS]
       }),
     [plantedIdeas.length]
   )
@@ -27,8 +29,9 @@ export default function BonsaiField() {
         <BonsaiTree
           key={idea.id}
           position={positions[i]}
-          title={idea.title}
+          idea={idea}
           justPlanted={idea.id === justPlantedId}
+          onSelect={() => openWorkspace(idea)}
         />
       ))}
     </>

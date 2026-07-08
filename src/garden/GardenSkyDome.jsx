@@ -5,7 +5,12 @@ import { bakeVertexGradient, stopsGradient } from '../world/vertexGradient'
 // world/GardenSky.jsx — confusingly named for that scene, not this
 // one), with cooler dusk tones so the Garden reads as its own place
 // rather than a reskin of the same sky.
-const RADIUS = 60
+//
+// Radius has to comfortably clear the sun's distance from the origin
+// (~76.5, reusing world/Sun.jsx's fixed position) — anything past the
+// dome radius renders behind its opaque backface and is invisible, the
+// same bug fixed once already for the floating world's clouds.
+const RADIUS = 90
 
 const skyGeometry = new THREE.SphereGeometry(RADIUS, 24, 16)
 

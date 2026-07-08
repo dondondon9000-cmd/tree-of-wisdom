@@ -31,7 +31,13 @@ const BABY_SCALE = 0.38
 // The title label lives outside the scaling group, at a fixed height,
 // so it stays a consistent, readable size regardless of how big the
 // tree itself currently is.
-export default function BonsaiTree({ position, title, justPlanted = false }) {
+//
+// onSelect fires from the pedestal and pot specifically, not the tree
+// itself — the tree is tiny at BABY_SCALE and would be a frustratingly
+// small tap target on its own, but the furniture under it is always a
+// consistent, easy-to-hit size regardless of how big the idea's tree
+// currently is.
+export default function BonsaiTree({ position, idea, justPlanted = false, onSelect }) {
   const bonsai = useMemo(() => buildBonsai(), [])
   const treeRef = useRef()
   const growProgress = useRef(justPlanted ? 0 : 1)
@@ -44,14 +50,19 @@ export default function BonsaiTree({ position, title, justPlanted = false }) {
     }
   })
 
+  function handleClick(e) {
+    e.stopPropagation()
+    onSelect?.()
+  }
+
   return (
     <group position={position}>
-      <mesh geometry={pedestalGeometry} position={[0, PEDESTAL_HEIGHT / 2, 0]}>
+      <mesh geometry={pedestalGeometry} position={[0, PEDESTAL_HEIGHT / 2, 0]} onClick={handleClick}>
         <meshStandardMaterial vertexColors roughness={0.95} />
         <SeedOutline geometry={pedestalGeometry} scale={1.025} />
       </mesh>
 
-      <mesh geometry={potGeometry} position={[0, PEDESTAL_HEIGHT + POT_HEIGHT / 2, 0]}>
+      <mesh geometry={potGeometry} position={[0, PEDESTAL_HEIGHT + POT_HEIGHT / 2, 0]} onClick={handleClick}>
         <meshStandardMaterial vertexColors roughness={0.7} />
         <SeedOutline geometry={potGeometry} scale={1.05} />
       </mesh>
@@ -80,7 +91,7 @@ export default function BonsaiTree({ position, title, justPlanted = false }) {
         ))}
       </group>
 
-      {title && (
+      {idea?.title && (
         <Text
           font="/fonts/manrope-400.woff"
           position={[0, PEDESTAL_HEIGHT + POT_HEIGHT + 0.85, 0]}
@@ -91,7 +102,7 @@ export default function BonsaiTree({ position, title, justPlanted = false }) {
           outlineWidth={0.012}
           outlineColor="#39ff14"
         >
-          {title}
+          {idea.title}
         </Text>
       )}
     </group>

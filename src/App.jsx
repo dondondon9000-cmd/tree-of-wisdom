@@ -5,6 +5,7 @@ import { useGardenStore } from './lib/store'
 import TranscriptBubble from './components/TranscriptBubble'
 import SearchPanel from './components/SearchPanel'
 import PlantTransition from './components/PlantTransition'
+import IdeaWorkspace from './components/IdeaWorkspace'
 import './App.css'
 
 export default function App() {
@@ -35,8 +36,11 @@ export default function App() {
         </>
       )}
 
-      {view === 'garden' && plantedIdeas.length === 0 && (
-        <div className="hint-text">plant an idea to grow it here</div>
+      {view === 'garden' && (
+        <>
+          {plantedIdeas.length === 0 && <div className="hint-text">plant an idea to grow it here</div>}
+          <IdeaWorkspace />
+        </>
       )}
 
       {/* Hidden mid-transition — switching views manually while the

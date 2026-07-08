@@ -1,16 +1,19 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
+import Sun from '../world/Sun'
 import GardenSkyDome from './GardenSkyDome'
 import GardenGround from './GardenGround'
+import GardenGrass from './GardenGrass'
+import GardenPath from './GardenPath'
 import BonsaiField from './BonsaiField'
 
 // The Garden — a separate environment from the floating idea world,
 // where planted ideas live on as bonsai trees. No talk seed, no
 // recording flow here; this is purely a place to look at what you've
-// already grown. The scripted fly-into-soil transition connecting the
-// two scenes is a separate, later piece of work — for now, App.jsx
-// just swaps between them.
+// already grown. plantWithTransition (store.js) is what actually gets
+// you here from the floating world; the "🌳 garden" toggle button is
+// the manual way in otherwise.
 export default function Garden() {
   return (
     <Canvas camera={{ position: [0, 3.5, 10], fov: 55 }} gl={{ antialias: true }}>
@@ -21,7 +24,10 @@ export default function Garden() {
       <pointLight position={[-4, 5, -4]} intensity={1.0} color="#eaf0c8" distance={30} decay={2} />
 
       <GardenSkyDome />
+      <Sun />
       <GardenGround />
+      <GardenGrass />
+      <GardenPath />
       <BonsaiField />
 
       <OrbitControls

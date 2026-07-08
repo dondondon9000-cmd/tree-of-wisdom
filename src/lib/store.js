@@ -178,4 +178,13 @@ export const useGardenStore = create((set, get) => ({
       if (get().justPlantedId === idea.id) set({ justPlantedId: null })
     }, 3000)
   },
+
+  // The workspace for a single planted idea — opened by tapping its
+  // bonsai in the Garden. Just a detail view for now (what got said,
+  // the title/summary); the actual "work on it" mechanic that would
+  // eventually grow the bonsai bigger is future work this is the
+  // entry point for.
+  workspaceIdea: null,
+  openWorkspace: (idea) => set({ workspaceIdea: idea }),
+  closeWorkspace: () => set({ workspaceIdea: null }),
 }))
