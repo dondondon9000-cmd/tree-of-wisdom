@@ -31,8 +31,13 @@ create policy "Allow all access"
 alter table ideas add column if not exists plan jsonb;
 
 -- Migration: the bloom milestone (all plan steps checked off), plus
--- the post-bloom dashboard's brainstorm notes and the AI-written
--- project brief generated from them (api/brief.js).
+-- the ongoing brainstorm/journal notes and the AI-written project
+-- brief generated from them (api/brief.js).
 alter table ideas add column if not exists bloomed boolean not null default false;
 alter table ideas add column if not exists notes jsonb not null default '[]'::jsonb;
 alter table ideas add column if not exists brief text;
+
+-- Migration: the Workshop's living task list (api/checkin.js suggests
+-- additions to it) — separate from `plan`, which is the frozen
+-- pre-bloom checklist that got the idea to bloom in the first place.
+alter table ideas add column if not exists tasks jsonb not null default '[]'::jsonb;

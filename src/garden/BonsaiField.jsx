@@ -14,6 +14,7 @@ export default function BonsaiField() {
   const justPlantedId = useGardenStore((s) => s.justPlantedId)
   const justBloomedId = useGardenStore((s) => s.justBloomedId)
   const openWorkspace = useGardenStore((s) => s.openWorkspace)
+  const enterWorkshop = useGardenStore((s) => s.enterWorkshop)
 
   const positions = useMemo(
     () =>
@@ -34,6 +35,7 @@ export default function BonsaiField() {
           justPlanted={idea.id === justPlantedId}
           justBloomed={idea.id === justBloomedId}
           onSelect={() => openWorkspace(idea)}
+          onEnterWorkshop={() => enterWorkshop(idea)}
         />
       ))}
     </>

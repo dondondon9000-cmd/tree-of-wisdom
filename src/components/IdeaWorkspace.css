@@ -132,139 +132,38 @@
   margin-right: 6px;
 }
 
-.workspace-dashboard {
+.workspace-plan-step input[type='checkbox']:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.workspace-bloom-message {
   width: 100%;
   margin-top: 4px;
   border-top: 1px solid rgba(20, 15, 10, 0.15);
   padding-top: 12px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
 }
 
-.workspace-dashboard-label {
+.workspace-bloom-message p {
   margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-size: 0.85rem;
   color: #a13a7a;
   text-align: center;
+  line-height: 1.4;
 }
 
-.workspace-notes-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.workspace-note {
-  background: rgba(255, 158, 196, 0.12);
-  border: 1px solid rgba(255, 158, 196, 0.3);
-  border-radius: 10px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  color: #3a2f22;
-  line-height: 1.35;
-}
-
-.workspace-note-form {
-  display: flex;
-  gap: 6px;
-}
-
-.workspace-note-form input {
-  flex: 1;
-  border: 1px solid rgba(20, 15, 10, 0.2);
-  border-radius: 10px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  background: rgba(255, 255, 255, 0.6);
-  color: #2a2016;
-}
-
-.workspace-note-form button {
-  border: 1px solid rgba(20, 15, 10, 0.2);
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  background: rgba(255, 158, 196, 0.25);
-  color: #3a2f22;
-  cursor: pointer;
-}
-
-.workspace-note-form button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.workspace-mic-button {
-  align-self: center;
-  border: 1px solid rgba(20, 15, 10, 0.2);
-  border-radius: 999px;
-  padding: 7px 16px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  background: rgba(255, 255, 255, 0.6);
-  color: #3a2f22;
-  cursor: pointer;
-}
-
-.workspace-mic-button.active {
-  background: rgba(255, 62, 108, 0.85);
-  color: #fff6f0;
-  border-color: transparent;
-  animation: workspace-mic-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes workspace-mic-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.workspace-note-interim {
-  text-align: center;
-  font-style: italic;
-  font-size: 0.82rem;
-  color: #6b5c45;
-  margin: 0;
-}
-
-.workspace-generate-brief {
-  align-self: center;
+.workspace-enter-door {
   border: 2px solid rgba(20, 15, 10, 0.85);
   border-radius: 999px;
   padding: 8px 18px;
   font-size: 0.88rem;
   font-weight: 700;
   font-family: inherit;
-  background: linear-gradient(160deg, #ffd9e8, #ff9ec4);
-  color: #3a1224;
+  background: linear-gradient(160deg, #ffcf8a, #d68a4a);
+  color: #3a2410;
   cursor: pointer;
-}
-
-.workspace-generate-brief:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.workspace-brief {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(20, 15, 10, 0.15);
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.workspace-brief p {
-  margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  color: #2a2016;
 }

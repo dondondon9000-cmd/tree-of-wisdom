@@ -59,3 +59,24 @@
   -webkit-text-stroke: 0.4px rgba(111, 224, 138, 0.7);
   transition: text-shadow 0.8s ease;
 }
+
+.garden-hint-side {
+  position: fixed;
+  left: 3%;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 220px;
+  color: #2a0d24;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  pointer-events: none;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  text-shadow:
+    0 0 3px rgba(255, 158, 224, 0.95),
+    0 0 8px rgba(214, 138, 255, 0.75),
+    0 0 16px rgba(180, 120, 255, 0.5);
+  -webkit-text-stroke: 0.3px rgba(255, 158, 224, 0.65);
+}

@@ -131,6 +131,7 @@ export const useGardenStore = create((set, get) => ({
       bloomed: row.bloomed || false,
       notes: row.notes || [],
       brief: row.brief || null,
+      tasks: row.tasks || [],
     }))
     set((state) => ({ plantedIdeas: [...loaded, ...state.plantedIdeas], plantedIdeasLoaded: true }))
   },
@@ -276,15 +277,16 @@ export const useGardenStore = create((set, get) => ({
 
   justBloomedId: null,
 
-  // A brainstorm note added to a bloomed idea's dashboard — either
-  // typed or spoken (see noteCapture.js), just plain text plus a
-  // timestamp. Feeds into generateBrief below as extra context.
+  // A journal entry logged in the Workshop — either typed or spoken
+  // (see noteCapture.js), just plain text plus a timestamp. Feeds into
+  // both generateBrief and checkIn below as extra context.
   addNote: (ideaId, text) => {
     const note = { text, createdAt: new Date().toISOString() }
     const applyAdd = (i) => (i.id === ideaId ? { ...i, notes: [...(i.notes || []), note] } : i)
     set((state) => ({
       plantedIdeas: state.plantedIdeas.map(applyAdd),
       workspaceIdea: state.workspaceIdea ? applyAdd(state.workspaceIdea) : state.workspaceIdea,
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
     }))
     if (supabase) {
       const idea = get().plantedIdeas.find((i) => i.id === ideaId)
@@ -328,6 +330,7 @@ export const useGardenStore = create((set, get) => ({
         plantedIdeas: state.plantedIdeas.map((i) => (i.id === idea.id ? { ...i, brief } : i)),
         workspaceIdea:
           state.workspaceIdea?.id === idea.id ? { ...state.workspaceIdea, brief } : state.workspaceIdea,
+        roomIdea: state.roomIdea?.id === idea.id ? { ...state.roomIdea, brief } : state.roomIdea,
       }))
 
       if (supabase) {
@@ -338,6 +341,114 @@ export const useGardenStore = create((set, get) => ({
       set({ briefError: err.message })
     } finally {
       set({ generatingBrief: false })
+    }
+  },
+
+  // The Workshop is a third top-level scene (view: 'workshop'), one
+  // idea's own room — reached by walking through the door that
+  // appears on a bloomed bonsai. roomIdea is which idea's room is
+  // showing; workshopTransition drives a plain fade-to-black cut (see
+  // WorkshopTransition.jsx) for both entering and leaving, the same
+  // "hide the swap behind a cut" trick plantWithTransition uses
+  // between World and Garden.
+  roomIdea: null,
+  workshopTransition: null, // 'entering' | 'exiting' | null
+  enterWorkshop: async (idea) => {
+    if (get().workshopTransition) return
+    set({ workshopTransition: 'entering' })
+    await sleep(500)
+    set({ view: 'workshop', roomIdea: idea })
+    await sleep(400)
+    set({ workshopTransition: null })
+  },
+  exitWorkshop: async () => {
+    if (get().workshopTransition) return
+    set({ workshopTransition: 'exiting' })
+    await sleep(500)
+    set({ view: 'garden', roomIdea: null })
+    await sleep(400)
+    set({ workshopTransition: null })
+  },
+
+  // The Workshop's living task list — unlike `plan` (the frozen
+  // pre-bloom checklist that got the idea to bloom), this has no
+  // fixed length and no finish line: add to it as you go, check things
+  // off as real work gets done. checkIn's suggestedTasks feed into
+  // this the same way addTask does.
+  addTask: (ideaId, text) => {
+    const task = { text, done: false }
+    const applyAdd = (i) => (i.id === ideaId ? { ...i, tasks: [...(i.tasks || []), task] } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    if (supabase) {
+      const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+      if (idea) {
+        supabase
+          .from('ideas')
+          .update({ tasks: idea.tasks })
+          .eq('id', ideaId)
+          .then(({ error }) => {
+            if (error) console.error('Failed to save task to Supabase:', error.message)
+          })
+      }
+    }
+  },
+
+  toggleTask: (ideaId, taskIndex) => {
+    const applyToggle = (i) => {
+      if (i.id !== ideaId || !i.tasks) return i
+      const tasks = i.tasks.map((task, idx) => (idx === taskIndex ? { ...task, done: !task.done } : task))
+      return { ...i, tasks }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyToggle),
+      roomIdea: state.roomIdea ? applyToggle(state.roomIdea) : state.roomIdea,
+    }))
+    if (supabase) {
+      const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+      if (idea?.tasks) {
+        supabase
+          .from('ideas')
+          .update({ tasks: idea.tasks })
+          .eq('id', ideaId)
+          .then(({ error }) => {
+            if (error) console.error('Failed to save task progress to Supabase:', error.message)
+          })
+      }
+    }
+  },
+
+  // The recurring AI check-in (api/checkin.js) — unlike generateBrief,
+  // this is meant to be called again and again as work continues, so
+  // its result is kept in memory only (lastCheckin), not persisted;
+  // the journal entries and task list it's built from are what's
+  // actually durable.
+  generatingCheckin: false,
+  checkinError: null,
+  lastCheckin: null,
+  checkIn: async (idea) => {
+    if (!idea || get().generatingCheckin) return
+    set({ generatingCheckin: true, checkinError: null })
+    try {
+      const res = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: idea.title,
+          brief: idea.brief,
+          tasks: idea.tasks || [],
+          notes: idea.notes || [],
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to check in on this idea.')
+      set({ lastCheckin: data })
+    } catch (err) {
+      set({ checkinError: err.message })
+    } finally {
+      set({ generatingCheckin: false })
     }
   },
 }))

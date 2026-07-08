@@ -1,0 +1,13 @@
+.workshop-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #0a0705;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+
+.workshop-transition.active {
+  opacity: 1;
+}

@@ -4,6 +4,7 @@ import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { buildBonsai, potGeometry } from './bonsaiGeometry'
 import { pedestalGeometry, PEDESTAL_HEIGHT } from './pedestalGeometry'
+import { doorGeometry, DOOR_HEIGHT } from './doorGeometry'
 import SeedOutline from '../world/SeedOutline'
 
 const POT_HEIGHT = 0.2
@@ -40,7 +41,14 @@ const FULL_SCALE = 1.0
 // small tap target on its own, but the furniture under it is always a
 // consistent, easy-to-hit size regardless of how big the idea's tree
 // currently is.
-export default function BonsaiTree({ position, idea, justPlanted = false, justBloomed = false, onSelect }) {
+export default function BonsaiTree({
+  position,
+  idea,
+  justPlanted = false,
+  justBloomed = false,
+  onSelect,
+  onEnterWorkshop,
+}) {
   const bonsai = useMemo(() => buildBonsai(), [])
   const treeRef = useRef()
   const flashLightRef = useRef()
@@ -66,8 +74,15 @@ export default function BonsaiTree({ position, idea, justPlanted = false, justBl
       currentScale.current = eased * BABY_SCALE
       treeRef.current?.scale.setScalar(currentScale.current)
     } else {
+      // Bloom is a one-way milestone (see togglePlanStep in store.js) —
+      // the tree's size should honor that too, so it doesn't shrink
+      // back down if a step ever gets unchecked after blooming.
       const steps = idea?.plan?.steps
-      const completionRatio = steps?.length ? steps.filter((s) => s.done).length / steps.length : 0
+      const completionRatio = idea?.bloomed
+        ? 1
+        : steps?.length
+          ? steps.filter((s) => s.done).length / steps.length
+          : 0
       const target = BABY_SCALE + (FULL_SCALE - BABY_SCALE) * completionRatio
       currentScale.current += (target - currentScale.current) * Math.min(1, delta * STEP_GROW_SPEED)
       treeRef.current?.scale.setScalar(currentScale.current)
@@ -86,8 +101,25 @@ export default function BonsaiTree({ position, idea, justPlanted = false, justBl
     onSelect?.()
   }
 
+  function handleDoorClick(e) {
+    e.stopPropagation()
+    onEnterWorkshop?.()
+  }
+
   return (
     <group position={position}>
+      {idea?.bloomed && (
+        <group position={[1.15, 0, 0.3]} rotation={[0, -0.4, 0]} onClick={handleDoorClick}>
+          <mesh geometry={doorGeometry.geometry}>
+            <meshStandardMaterial vertexColors roughness={0.75} />
+          </mesh>
+          <mesh geometry={doorGeometry.outline}>
+            <meshBasicMaterial color="#120a05" side={THREE.BackSide} toneMapped={false} />
+          </mesh>
+          <pointLight position={[0, DOOR_HEIGHT * 0.6, 0.3]} color="#ffcf8a" intensity={0.6} distance={2} decay={2} />
+        </group>
+      )}
+
       <mesh geometry={pedestalGeometry} position={[0, PEDESTAL_HEIGHT / 2, 0]} onClick={handleClick}>
         <meshStandardMaterial vertexColors roughness={0.95} />
         <SeedOutline geometry={pedestalGeometry} scale={1.025} />
