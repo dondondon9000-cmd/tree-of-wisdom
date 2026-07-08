@@ -3,14 +3,30 @@
 // account needed. Trade-off: solid on Chrome/Android, unsupported or
 // flaky on Safari/iOS — callers should treat a null return as "not
 // supported here" and fall back to something else if that gap matters.
-export function createSpeechRecognizer({ onInterim, onError } = {}) {
+//
+// One SpeechRecognition object is created once and reused for every
+// capture, rather than a fresh one per capture. The underlying browser
+// speech service takes a moment to actually release the previous
+// session at the OS level, even after its JS-side onend has already
+// fired — starting a brand-new instance right after almost always
+// lands in that release window and fails with an "aborted" error.
+// Reusing the same object avoids that teardown/recreate cycle entirely.
+let sharedRecognition = null
+
+function getRecognition() {
+  if (sharedRecognition) return sharedRecognition
   const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
   if (!SpeechRecognitionCtor) return null
+  sharedRecognition = new SpeechRecognitionCtor()
+  sharedRecognition.continuous = true
+  sharedRecognition.interimResults = true
+  sharedRecognition.lang = 'en-US'
+  return sharedRecognition
+}
 
-  const recognition = new SpeechRecognitionCtor()
-  recognition.continuous = true
-  recognition.interimResults = true
-  recognition.lang = 'en-US'
+export function createSpeechRecognizer({ onInterim, onError } = {}) {
+  const recognition = getRecognition()
+  if (!recognition) return null
 
   let finalTranscript = ''
   let stopping = false
@@ -65,6 +81,10 @@ export function createSpeechRecognizer({ onInterim, onError } = {}) {
   }
 
   function start() {
+    finalTranscript = ''
+    stopping = false
+    ended = false
+    fatalError = null
     return new Promise((resolve, reject) => {
       recognition.onstart = () => {
         startReject = null
