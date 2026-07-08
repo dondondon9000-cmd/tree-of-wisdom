@@ -15,7 +15,9 @@ export default function TranscriptBubble() {
   return (
     <div className="transcript-bubble">
       <div className="transcript-bubble-body">
-        {draft.status === 'transcribing' && <p className="transcript-status">hearing you out…</p>}
+        {draft.status === 'listening' && (
+          <p className="transcript-text">{draft.transcript ? `"${draft.transcript}"` : 'listening…'}</p>
+        )}
 
         {draft.status === 'summarizing' && (
           <>
