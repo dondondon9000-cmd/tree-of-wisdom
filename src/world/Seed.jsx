@@ -57,6 +57,7 @@ export default function Seed({ position, title, color = '#fff1e0', radius = 0.45
       const dist = camera.position.distanceTo(group.current.position)
       const opacity = 1 - Math.min(Math.max((dist - 3) / 5, 0), 1)
       label.current.fillOpacity = opacity
+      label.current.outlineOpacity = opacity
       label.current.material.transparent = true
     }
   })
@@ -89,6 +90,9 @@ export default function Seed({ position, title, color = '#fff1e0', radius = 0.45
           anchorX="center"
           anchorY="bottom"
           fillOpacity={0}
+          outlineWidth={0.012}
+          outlineColor="#39ff14"
+          outlineOpacity={0}
         >
           {title}
         </Text>
