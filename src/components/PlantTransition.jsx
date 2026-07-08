@@ -11,7 +11,12 @@ export default function PlantTransition() {
 
   return (
     <div className={`plant-transition ${planting ? 'active' : ''}`}>
-      {planting && <div className="plant-transition-seed" />}
+      {planting && (
+        <>
+          <div className="plant-transition-dirt" />
+          <div className="plant-transition-seed" />
+        </>
+      )}
     </div>
   )
 }

@@ -9,6 +9,12 @@ import SeedOutline from '../world/SeedOutline'
 const POT_HEIGHT = 0.2
 const GROW_DURATION = 1.4
 
+// A freshly planted idea starts life as a tiny sapling, not a
+// full-grown tree — there's no "work on this idea over time" mechanic
+// yet to justify it being any bigger than that. When that exists,
+// this is the constant it'll animate away from.
+const BABY_SCALE = 0.38
+
 // One planted idea: a pedestal, a pot, and a unique bonsai (trunk +
 // foliage) built fresh per instance via buildBonsai() — same "unique
 // geometry per instance, cheap because there aren't many" approach
@@ -16,9 +22,15 @@ const GROW_DURATION = 1.4
 // don't need per-instance variety.
 //
 // justPlanted (set for the one bonsai that just arrived via
-// plantWithTransition) scales only the tree itself up from nothing,
-// ease-out — the pedestal and pot are the Garden's furniture and were
-// already there; it's specifically your idea that's growing into it.
+// plantWithTransition) scales only the tree itself up from nothing to
+// BABY_SCALE, ease-out — the pedestal and pot are the Garden's
+// furniture and were already there; it's specifically your idea that's
+// growing into it. Every other bonsai just renders at BABY_SCALE
+// directly, no animation.
+//
+// The title label lives outside the scaling group, at a fixed height,
+// so it stays a consistent, readable size regardless of how big the
+// tree itself currently is.
 export default function BonsaiTree({ position, title, justPlanted = false }) {
   const bonsai = useMemo(() => buildBonsai(), [])
   const treeRef = useRef()
@@ -28,7 +40,7 @@ export default function BonsaiTree({ position, title, justPlanted = false }) {
     if (growProgress.current < 1) {
       growProgress.current = Math.min(1, growProgress.current + delta / GROW_DURATION)
       const eased = 1 - Math.pow(1 - growProgress.current, 3)
-      treeRef.current?.scale.setScalar(eased)
+      treeRef.current?.scale.setScalar(eased * BABY_SCALE)
     }
   })
 
@@ -44,7 +56,11 @@ export default function BonsaiTree({ position, title, justPlanted = false }) {
         <SeedOutline geometry={potGeometry} scale={1.05} />
       </mesh>
 
-      <group ref={treeRef} scale={justPlanted ? 0 : 1} position={[0, PEDESTAL_HEIGHT + POT_HEIGHT, 0]}>
+      <group
+        ref={treeRef}
+        scale={justPlanted ? 0 : BABY_SCALE}
+        position={[0, PEDESTAL_HEIGHT + POT_HEIGHT, 0]}
+      >
         <mesh geometry={bonsai.trunk}>
           <meshStandardMaterial vertexColors roughness={0.85} />
         </mesh>
@@ -62,22 +78,22 @@ export default function BonsaiTree({ position, title, justPlanted = false }) {
             </mesh>
           </group>
         ))}
-
-        {title && (
-          <Text
-            font="/fonts/manrope-400.woff"
-            position={[0, 2.1, 0]}
-            fontSize={0.24}
-            color="#fff6e6"
-            anchorX="center"
-            anchorY="bottom"
-            outlineWidth={0.012}
-            outlineColor="#39ff14"
-          >
-            {title}
-          </Text>
-        )}
       </group>
+
+      {title && (
+        <Text
+          font="/fonts/manrope-400.woff"
+          position={[0, PEDESTAL_HEIGHT + POT_HEIGHT + 0.85, 0]}
+          fontSize={0.24}
+          color="#fff6e6"
+          anchorX="center"
+          anchorY="bottom"
+          outlineWidth={0.012}
+          outlineColor="#39ff14"
+        >
+          {title}
+        </Text>
+      )}
     </group>
   )
 }
