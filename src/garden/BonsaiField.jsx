@@ -10,6 +10,7 @@ const RADIUS = 5.5
 
 export default function BonsaiField() {
   const plantedIdeas = useGardenStore((s) => s.plantedIdeas)
+  const justPlantedId = useGardenStore((s) => s.justPlantedId)
 
   const positions = useMemo(
     () =>
@@ -23,7 +24,12 @@ export default function BonsaiField() {
   return (
     <>
       {plantedIdeas.map((idea, i) => (
-        <BonsaiTree key={idea.id} position={positions[i]} title={idea.title} />
+        <BonsaiTree
+          key={idea.id}
+          position={positions[i]}
+          title={idea.title}
+          justPlanted={idea.id === justPlantedId}
+        />
       ))}
     </>
   )

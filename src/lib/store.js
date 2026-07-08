@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { supabase } from './supabase'
 import { randomFieldPosition } from './randomFieldPosition'
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 // isRecording drives the visual "listening" state (veil, hint text,
 // talk-seed breathing). draft is the idea currently being processed
 // after you stop talking — its status walks through
@@ -92,9 +94,9 @@ export const useGardenStore = create((set, get) => ({
   closeSearch: () => set({ searchOpen: false }),
 
   // Which top-level scene is showing — the floating idea world, or the
-  // Garden where planted ideas live as bonsai trees. A plain toggle for
-  // now; the scripted fly-into-soil transition between the two is a
-  // separate, later piece of work.
+  // Garden where planted ideas live as bonsai trees. The manual toggle
+  // button uses this directly; plantWithTransition (below) also drives
+  // it as part of the scripted plant-and-arrive sequence.
   view: 'world',
   setView: (view) => set({ view }),
 
@@ -146,5 +148,34 @@ export const useGardenStore = create((set, get) => ({
         .eq('id', id)
       if (error) console.error('Failed to mark idea planted in Supabase:', error.message)
     }
+  },
+
+  // The scripted cut connecting "plant this idea" to actually arriving
+  // in the Garden. The two scenes are separate Canvases (their own
+  // scene graphs, cameras, everything) — a real continuous 3D flight
+  // between them would mean merging World and Garden into one shared
+  // scene, a much bigger rearchitecture. This fakes the same beat with
+  // a fade: drop/shrink the seed, cut to black, swap the scene
+  // underneath while hidden, then reveal the Garden with the new
+  // bonsai growing into place rather than just appearing full-size.
+  //
+  // `planting` drives the fade overlay (see PlantTransition.jsx);
+  // `justPlantedId` tells that one bonsai in the Garden to play its
+  // grow-in animation instead of rendering already full-size.
+  planting: null,
+  justPlantedId: null,
+  plantWithTransition: async (idea) => {
+    if (get().planting) return
+    set({ planting: idea, searchOpen: false })
+    await sleep(650) // let the fade fully cover the screen first
+
+    get().plantIdea(idea.id) // not awaited - the Supabase write shouldn't hold up the reveal
+    set({ view: 'garden', justPlantedId: idea.id })
+    await sleep(400) // give the Garden a moment to mount before revealing it
+
+    set({ planting: null })
+    setTimeout(() => {
+      if (get().justPlantedId === idea.id) set({ justPlantedId: null })
+    }, 3000)
   },
 }))

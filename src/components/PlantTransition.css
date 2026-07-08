@@ -1,0 +1,36 @@
+.plant-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #140f0a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plant-transition.active {
+  opacity: 1;
+}
+
+.plant-transition-seed {
+  width: 40px;
+  height: 52px;
+  background: linear-gradient(160deg, #f4dfae, #caa257);
+  border: 2px solid rgba(20, 15, 10, 0.85);
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  animation: plant-fall 0.7s ease-in forwards;
+}
+
+@keyframes plant-fall {
+  0% {
+    transform: translateY(-40px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120px) scale(0.3);
+    opacity: 0;
+  }
+}

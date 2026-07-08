@@ -26,7 +26,7 @@ export default function SearchPanel() {
   const searchOpen = useGardenStore((s) => s.searchOpen)
   const closeSearch = useGardenStore((s) => s.closeSearch)
   const ideas = useGardenStore((s) => s.ideas)
-  const plantIdea = useGardenStore((s) => s.plantIdea)
+  const plantWithTransition = useGardenStore((s) => s.plantWithTransition)
 
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
@@ -46,7 +46,7 @@ export default function SearchPanel() {
   }
 
   function handlePlant(idea) {
-    plantIdea(idea.id)
+    plantWithTransition(idea)
     setSelected(null)
   }
 
