@@ -52,7 +52,15 @@ export function createSpeechRecognizer({ onInterim, onError } = {}) {
     } else if (!fatalError) {
       // Chrome ends the session after a pause even in continuous mode —
       // restart so listening continues until the user actually taps stop.
-      recognition.start()
+      // Deferred rather than called synchronously here — restarting
+      // immediately, before the browser has fully torn down the
+      // previous session, can throw/abort on some Chrome versions.
+      setTimeout(() => {
+        if (!stopping) {
+          ended = false
+          recognition.start()
+        }
+      }, 0)
     }
   }
 
@@ -94,7 +102,11 @@ function mapSpeechError(code) {
       return 'No microphone found.'
     case 'network':
       return 'Speech recognition needs an internet connection.'
+    case 'aborted':
+      return 'Speech recognition was interrupted — try again.'
     default:
-      return 'Speech recognition failed — try again.'
+      // Included so an unfamiliar error code is diagnosable from a bug
+      // report alone, instead of guessing blind at what actually failed.
+      return `Speech recognition failed (${code}) — try again.`
   }
 }
