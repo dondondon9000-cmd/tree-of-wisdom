@@ -8,6 +8,21 @@ import { useGardenStore } from './store'
 let recognizer = null
 let startingUp = null
 
+// How long to wait after the last bit of speech before treating it as
+// "done talking" and moving on to summarizing — long enough that a
+// natural mid-thought pause doesn't cut you off, short enough to feel
+// responsive rather than laggy. Tapping the seed again still works too,
+// as a manual override if this doesn't fire fast enough for you.
+const SILENCE_TIMEOUT_MS = 1600
+let silenceTimer = null
+
+function clearSilenceTimer() {
+  if (silenceTimer) {
+    clearTimeout(silenceTimer)
+    silenceTimer = null
+  }
+}
+
 export async function beginCapture() {
   // Guard against being invoked twice in a row for one tap (a fast
   // double-click, or a duplicate event dispatched by the 3D click
@@ -15,6 +30,7 @@ export async function beginCapture() {
   // recognizer while it's already active, which throws synchronously
   // ("recognition has already started") rather than failing gracefully.
   if (recognizer) return
+  clearSilenceTimer()
 
   // Optimistic: show "listening" the instant you tap, don't make the
   // seed wait on the mic permission prompt to resolve before reacting
@@ -27,8 +43,17 @@ export async function beginCapture() {
     onInterim: (text) => {
       // Only apply if this recognizer is still the active one — an
       // old one's late callback shouldn't stomp a newer capture.
-      if (recognizer === activeRecognizer) {
-        useGardenStore.getState().setDraft({ status: 'listening', transcript: text })
+      if (recognizer !== activeRecognizer) return
+      useGardenStore.getState().setDraft({ status: 'listening', transcript: text })
+
+      // Every fresh bit of speech pushes the "are you done talking?"
+      // deadline back out; only once it actually goes quiet for a beat
+      // does this fire and move on to summarizing.
+      clearSilenceTimer()
+      if (text.trim()) {
+        silenceTimer = setTimeout(() => {
+          if (recognizer === activeRecognizer) endCapture()
+        }, SILENCE_TIMEOUT_MS)
       }
     },
     onError: (err) => {
@@ -67,6 +92,7 @@ export async function beginCapture() {
 }
 
 export async function endCapture() {
+  clearSilenceTimer()
   useGardenStore.getState().stopRecording()
   const activeRecognizer = recognizer
   const pendingStartup = startingUp
