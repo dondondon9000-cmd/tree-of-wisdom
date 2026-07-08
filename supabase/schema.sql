@@ -41,3 +41,8 @@ alter table ideas add column if not exists brief text;
 -- additions to it) — separate from `plan`, which is the frozen
 -- pre-bloom checklist that got the idea to bloom in the first place.
 alter table ideas add column if not exists tasks jsonb not null default '[]'::jsonb;
+
+-- Migration: whether the plan-reveal ceremony (PlanReveal.jsx) has
+-- been completed for this idea — false shows the reveal every visit
+-- through the door; true skips straight to the Workshop dashboard.
+alter table ideas add column if not exists plan_revealed boolean not null default false;

@@ -1,0 +1,132 @@
+.plan-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.plan-reveal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.plan-reveal-inner {
+  width: min(94vw, 640px);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: linear-gradient(165deg, rgba(255, 248, 238, 0.98), rgba(255, 240, 214, 0.96));
+  border: 2px solid rgba(20, 15, 10, 0.85);
+  border-radius: 22px;
+  box-shadow:
+    0 0 0 1px rgba(255, 207, 138, 0.4),
+    0 16px 48px rgba(0, 0, 0, 0.45);
+  padding: 36px 34px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.plan-reveal-eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a8703f;
+}
+
+.plan-reveal-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-reveal-brief p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #2a2016;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: plan-reveal-para 0.8s ease forwards;
+}
+
+@keyframes plan-reveal-para {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.plan-reveal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  animation: plan-reveal-para 0.8s ease forwards;
+}
+
+.plan-reveal-start {
+  border: 2px solid rgba(20, 15, 10, 0.85);
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: linear-gradient(160deg, #ffe3ae, #d68a4a);
+  color: #2a1608;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(214, 138, 74, 0.4);
+}
+
+.plan-reveal-start:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.plan-reveal-regenerate {
+  border: none;
+  background: none;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: #8a7d68;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.plan-reveal-regenerate:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.plan-reveal-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.plan-reveal-pending-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #3a2f22;
+  text-align: center;
+}
+
+.plan-reveal-error {
+  color: #a13a2a;
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 0;
+}

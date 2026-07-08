@@ -9,6 +9,7 @@ import PlantTransition from './components/PlantTransition'
 import WorkshopTransition from './components/WorkshopTransition'
 import IdeaWorkspace from './components/IdeaWorkspace'
 import WorkshopDashboard from './components/WorkshopDashboard'
+import PlanReveal from './components/PlanReveal'
 import './App.css'
 
 export default function App() {
@@ -67,7 +68,12 @@ export default function App() {
         </>
       )}
 
-      {view === 'workshop' && <WorkshopDashboard idea={roomIdea} visible={dashboardVisible} />}
+      {view === 'workshop' &&
+        (roomIdea?.planRevealed ? (
+          <WorkshopDashboard idea={roomIdea} visible={dashboardVisible} />
+        ) : (
+          <PlanReveal idea={roomIdea} visible={dashboardVisible} />
+        ))}
 
       {/* Hidden mid-transition, and mid-workshop-transition — switching
           views manually while a scripted sequence is already swapping

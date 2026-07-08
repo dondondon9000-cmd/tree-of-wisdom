@@ -132,6 +132,7 @@ export const useGardenStore = create((set, get) => ({
       notes: row.notes || [],
       brief: row.brief || null,
       tasks: row.tasks || [],
+      planRevealed: row.plan_revealed || false,
     }))
     set((state) => ({ plantedIdeas: [...loaded, ...state.plantedIdeas], plantedIdeasLoaded: true }))
   },
@@ -449,6 +450,28 @@ export const useGardenStore = create((set, get) => ({
       set({ checkinError: err.message })
     } finally {
       set({ generatingCheckin: false })
+    }
+  },
+
+  // Whether an idea's plan-reveal ceremony has been completed —
+  // PlanReveal.jsx shows first, every visit, until this flips true;
+  // after that, walking through the door goes straight to
+  // WorkshopDashboard instead. A one-time gate per idea, not a repeat
+  // "read the brief again" step.
+  revealPlan: (ideaId) => {
+    const applyReveal = (i) => (i.id === ideaId ? { ...i, planRevealed: true } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyReveal),
+      roomIdea: state.roomIdea ? applyReveal(state.roomIdea) : state.roomIdea,
+    }))
+    if (supabase) {
+      supabase
+        .from('ideas')
+        .update({ plan_revealed: true })
+        .eq('id', ideaId)
+        .then(({ error }) => {
+          if (error) console.error('Failed to save plan-reveal state to Supabase:', error.message)
+        })
     }
   },
 }))
