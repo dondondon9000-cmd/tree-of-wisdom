@@ -12,6 +12,7 @@ export const BONSAI_RING_RADIUS = 5.5
 export default function BonsaiField() {
   const plantedIdeas = useGardenStore((s) => s.plantedIdeas)
   const justPlantedId = useGardenStore((s) => s.justPlantedId)
+  const justBloomedId = useGardenStore((s) => s.justBloomedId)
   const openWorkspace = useGardenStore((s) => s.openWorkspace)
 
   const positions = useMemo(
@@ -31,6 +32,7 @@ export default function BonsaiField() {
           position={positions[i]}
           idea={idea}
           justPlanted={idea.id === justPlantedId}
+          justBloomed={idea.id === justBloomedId}
           onSelect={() => openWorkspace(idea)}
         />
       ))}

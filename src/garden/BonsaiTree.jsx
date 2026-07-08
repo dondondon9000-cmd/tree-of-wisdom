@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import * as THREE from 'three'
@@ -9,6 +9,7 @@ import SeedOutline from '../world/SeedOutline'
 const POT_HEIGHT = 0.2
 const GROW_DURATION = 1.4
 const STEP_GROW_SPEED = 2.5 // how fast the tree eases toward its target size, per second
+const BLOOM_FLASH_DURATION = 1.6 // one-time pink flash when a plan's last step is checked off
 
 // A freshly planted idea starts life as a tiny sapling, not a
 // full-grown tree. It only gets bigger by actually being worked on —
@@ -39,11 +40,24 @@ const FULL_SCALE = 1.0
 // small tap target on its own, but the furniture under it is always a
 // consistent, easy-to-hit size regardless of how big the idea's tree
 // currently is.
-export default function BonsaiTree({ position, idea, justPlanted = false, onSelect }) {
+export default function BonsaiTree({ position, idea, justPlanted = false, justBloomed = false, onSelect }) {
   const bonsai = useMemo(() => buildBonsai(), [])
   const treeRef = useRef()
+  const flashLightRef = useRef()
   const growProgress = useRef(justPlanted ? 0 : 1)
   const currentScale = useRef(justPlanted ? 0 : BABY_SCALE)
+  const flashProgress = useRef(justBloomed ? 0 : 1)
+
+  // Unlike justPlanted (only ever true at a tree's very first mount,
+  // since a new plantedIdeas entry mounts a brand new BonsaiTree),
+  // justBloomed goes false -> true on a tree that's already been
+  // sitting there for a while — the useRef initial value above only
+  // covers the (rare) case of loading a page with a bloom already in
+  // flight, so the real trigger is this effect on the actual
+  // false -> true transition.
+  useEffect(() => {
+    if (justBloomed) flashProgress.current = 0
+  }, [justBloomed])
 
   useFrame((_, delta) => {
     if (growProgress.current < 1) {
@@ -51,14 +65,20 @@ export default function BonsaiTree({ position, idea, justPlanted = false, onSele
       const eased = 1 - Math.pow(1 - growProgress.current, 3)
       currentScale.current = eased * BABY_SCALE
       treeRef.current?.scale.setScalar(currentScale.current)
-      return
+    } else {
+      const steps = idea?.plan?.steps
+      const completionRatio = steps?.length ? steps.filter((s) => s.done).length / steps.length : 0
+      const target = BABY_SCALE + (FULL_SCALE - BABY_SCALE) * completionRatio
+      currentScale.current += (target - currentScale.current) * Math.min(1, delta * STEP_GROW_SPEED)
+      treeRef.current?.scale.setScalar(currentScale.current)
     }
 
-    const steps = idea?.plan?.steps
-    const completionRatio = steps?.length ? steps.filter((s) => s.done).length / steps.length : 0
-    const target = BABY_SCALE + (FULL_SCALE - BABY_SCALE) * completionRatio
-    currentScale.current += (target - currentScale.current) * Math.min(1, delta * STEP_GROW_SPEED)
-    treeRef.current?.scale.setScalar(currentScale.current)
+    if (flashProgress.current < 1) {
+      flashProgress.current = Math.min(1, flashProgress.current + delta / BLOOM_FLASH_DURATION)
+      if (flashLightRef.current) {
+        flashLightRef.current.intensity = Math.sin(flashProgress.current * Math.PI) * 3.5
+      }
+    }
   })
 
   function handleClick(e) {
@@ -100,6 +120,14 @@ export default function BonsaiTree({ position, idea, justPlanted = false, onSele
             </mesh>
           </group>
         ))}
+
+        {idea?.bloomed && bonsai.blossoms && (
+          <mesh geometry={bonsai.blossoms}>
+            <meshStandardMaterial vertexColors roughness={0.5} emissive="#ff9ec4" emissiveIntensity={0.2} />
+          </mesh>
+        )}
+
+        <pointLight ref={flashLightRef} color="#ff9ec4" intensity={0} distance={4} decay={2} />
       </group>
 
       {idea?.title && (

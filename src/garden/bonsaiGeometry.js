@@ -23,6 +23,16 @@ const potGradient = stopsGradient([
   { t: 1, color: new THREE.Color('#b8654a') },
 ])
 
+// Only shown once an idea has bloomed (every plan step checked off) —
+// see BonsaiTree.jsx. A little variety of pink/white so the canopy
+// reads as flowering rather than just having a few identical dots
+// stuck on it.
+const blossomGradient = stopsGradient([
+  { t: 0, color: new THREE.Color('#ffd9e8') },
+  { t: 0.5, color: new THREE.Color('#ff9ec4') },
+  { t: 1, color: new THREE.Color('#fff6f0') },
+])
+
 // Shared across every bonsai — the pot doesn't need per-instance
 // randomization the way the trunk/foliage do.
 export const potGeometry = new THREE.CylinderGeometry(0.3, 0.22, 0.2, 12)
@@ -88,6 +98,30 @@ function buildFoliageClump(center) {
   return { geometry: merged, outline }
 }
 
+// Small blossom dots scattered near the outer surface of each foliage
+// clump. Each sphere gets its own fixed random t along blossomGradient
+// (not a per-vertex gradient — the whole tiny sphere is one color) so
+// the merged result reads as a scatter of individually-colored
+// blossoms rather than one smooth-shaded blob.
+function buildBlossoms(foliageClumps) {
+  const parts = []
+  for (const clump of foliageClumps) {
+    clump.geometry.computeBoundingSphere()
+    const { center, radius } = clump.geometry.boundingSphere
+    const blossomCount = 3 + Math.floor(Math.random() * 3)
+    for (let i = 0; i < blossomCount; i++) {
+      const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.6 + 0.2, Math.random() - 0.5).normalize()
+      const pos = center.clone().addScaledVector(dir, radius * 0.85)
+      const sphere = new THREE.SphereGeometry(0.035 + Math.random() * 0.02, 6, 5)
+      sphere.translate(pos.x, pos.y, pos.z)
+      const t = Math.random()
+      bakeVertexGradient(sphere, () => t, (tt) => blossomGradient(tt))
+      parts.push(sphere)
+    }
+  }
+  return mergeGeometries(parts, false)
+}
+
 export function buildBonsai() {
   const { geometry: trunk, outline: trunkOutline, topPoint } = buildTrunk()
 
@@ -107,5 +141,7 @@ export function buildBonsai() {
     foliage.push(buildFoliageClump(center))
   }
 
-  return { trunk, trunkOutline, foliage }
+  const blossoms = buildBlossoms(foliage)
+
+  return { trunk, trunkOutline, foliage, blossoms }
 }

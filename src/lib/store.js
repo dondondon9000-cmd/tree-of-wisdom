@@ -128,6 +128,9 @@ export const useGardenStore = create((set, get) => ({
       confidence: row.confidence,
       status: 'planted',
       plan: row.plan || null,
+      bloomed: row.bloomed || false,
+      notes: row.notes || [],
+      brief: row.brief || null,
     }))
     set((state) => ({ plantedIdeas: [...loaded, ...state.plantedIdeas], plantedIdeasLoaded: true }))
   },
@@ -239,17 +242,102 @@ export const useGardenStore = create((set, get) => ({
       plantedIdeas: state.plantedIdeas.map(applyToggle),
       workspaceIdea: state.workspaceIdea ? applyToggle(state.workspaceIdea) : state.workspaceIdea,
     }))
+
+    // Bloom is a one-way milestone — once every step in the plan is
+    // checked off, the idea blooms and stays bloomed even if a step
+    // gets unchecked again later.
+    const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+    const justBloomed = idea?.plan?.steps?.length > 0 && idea.plan.steps.every((s) => s.done) && !idea.bloomed
+    if (justBloomed) {
+      const applyBloom = (i) => (i.id === ideaId ? { ...i, bloomed: true } : i)
+      set((state) => ({
+        plantedIdeas: state.plantedIdeas.map(applyBloom),
+        workspaceIdea: state.workspaceIdea ? applyBloom(state.workspaceIdea) : state.workspaceIdea,
+        justBloomedId: ideaId,
+      }))
+      setTimeout(() => {
+        if (get().justBloomedId === ideaId) set({ justBloomedId: null })
+      }, 3000)
+    }
+
     if (supabase) {
-      const idea = get().plantedIdeas.find((i) => i.id === ideaId)
-      if (idea?.plan) {
+      const updated = get().plantedIdeas.find((i) => i.id === ideaId)
+      if (updated?.plan) {
         supabase
           .from('ideas')
-          .update({ plan: idea.plan })
+          .update({ plan: updated.plan, bloomed: updated.bloomed })
           .eq('id', ideaId)
           .then(({ error }) => {
             if (error) console.error('Failed to save step progress to Supabase:', error.message)
           })
       }
+    }
+  },
+
+  justBloomedId: null,
+
+  // A brainstorm note added to a bloomed idea's dashboard — either
+  // typed or spoken (see noteCapture.js), just plain text plus a
+  // timestamp. Feeds into generateBrief below as extra context.
+  addNote: (ideaId, text) => {
+    const note = { text, createdAt: new Date().toISOString() }
+    const applyAdd = (i) => (i.id === ideaId ? { ...i, notes: [...(i.notes || []), note] } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      workspaceIdea: state.workspaceIdea ? applyAdd(state.workspaceIdea) : state.workspaceIdea,
+    }))
+    if (supabase) {
+      const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+      if (idea) {
+        supabase
+          .from('ideas')
+          .update({ notes: idea.notes })
+          .eq('id', ideaId)
+          .then(({ error }) => {
+            if (error) console.error('Failed to save note to Supabase:', error.message)
+          })
+      }
+    }
+  },
+
+  // The "well reviewed plan" — unlike generatePlan, this is explicitly
+  // user-triggered (a button in the dashboard) and re-runnable any
+  // time, since more notes might get added after the first brief.
+  generatingBrief: false,
+  briefError: null,
+  generateBrief: async (idea) => {
+    if (!idea || get().generatingBrief) return
+    set({ generatingBrief: true, briefError: null })
+    try {
+      const res = await fetch('/api/brief', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          transcript: idea.transcript,
+          title: idea.title,
+          summary: idea.summary,
+          steps: idea.plan?.steps || [],
+          notes: idea.notes || [],
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate a plan for this idea.')
+
+      const brief = data.brief
+      set((state) => ({
+        plantedIdeas: state.plantedIdeas.map((i) => (i.id === idea.id ? { ...i, brief } : i)),
+        workspaceIdea:
+          state.workspaceIdea?.id === idea.id ? { ...state.workspaceIdea, brief } : state.workspaceIdea,
+      }))
+
+      if (supabase) {
+        const { error } = await supabase.from('ideas').update({ brief }).eq('id', idea.id)
+        if (error) console.error('Failed to save plan brief to Supabase:', error.message)
+      }
+    } catch (err) {
+      set({ briefError: err.message })
+    } finally {
+      set({ generatingBrief: false })
     }
   },
 }))
