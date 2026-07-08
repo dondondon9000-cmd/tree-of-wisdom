@@ -9,6 +9,13 @@ let recognizer = null
 let startingUp = null
 
 export async function beginCapture() {
+  // Guard against being invoked twice in a row for one tap (a fast
+  // double-click, or a duplicate event dispatched by the 3D click
+  // raycasting) — without this, a second call could start the shared
+  // recognizer while it's already active, which throws synchronously
+  // ("recognition has already started") rather than failing gracefully.
+  if (recognizer) return
+
   // Optimistic: show "listening" the instant you tap, don't make the
   // seed wait on the mic permission prompt to resolve before reacting
   // — that lag reads as an unresponsive button otherwise. Roll back if
