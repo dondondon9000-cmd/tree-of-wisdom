@@ -91,12 +91,54 @@ export const useGardenStore = create((set, get) => ({
   openSearch: () => set({ searchOpen: true }),
   closeSearch: () => set({ searchOpen: false }),
 
-  // Planting removes a floating idea from the sky — the actual Garden
-  // (bonsai trees on tables) doesn't exist yet, so for now this just
-  // marks the row planted and takes it out of the ambient field; once
-  // the Garden is built, this is the hook it'll render from instead.
+  // Which top-level scene is showing — the floating idea world, or the
+  // Garden where planted ideas live as bonsai trees. A plain toggle for
+  // now; the scripted fly-into-soil transition between the two is a
+  // separate, later piece of work.
+  view: 'world',
+  setView: (view) => set({ view }),
+
+  // Bonsai trees the Garden renders, one per planted idea. Kept
+  // separate from `ideas` (the floating field's data) the same way
+  // `ideas` itself is separate from placeholders — different scene,
+  // different data. Position is assigned once at plant time so a
+  // bonsai never jumps around on later renders.
+  plantedIdeas: [],
+  plantedIdeasLoaded: false,
+  loadPlantedIdeas: async () => {
+    if (!supabase || get().plantedIdeasLoaded) return
+    const { data, error } = await supabase
+      .from('ideas')
+      .select('*')
+      .eq('status', 'planted')
+      .order('planted_at', { ascending: true })
+    if (error) {
+      console.error('Failed to load planted ideas from Supabase:', error.message)
+      return
+    }
+    const loaded = data.map((row) => ({
+      id: row.id,
+      transcript: row.transcript,
+      title: row.title,
+      summary: row.summary,
+      keywords: row.keywords || [],
+      category: row.category,
+      confidence: row.confidence,
+      status: 'planted',
+    }))
+    set((state) => ({ plantedIdeas: [...loaded, ...state.plantedIdeas], plantedIdeasLoaded: true }))
+  },
+
+  // Planting removes a floating idea from the sky and adds it to the
+  // Garden instead.
   plantIdea: async (id) => {
-    set((state) => ({ ideas: state.ideas.filter((i) => i.id !== id) }))
+    set((state) => {
+      const idea = state.ideas.find((i) => i.id === id)
+      return {
+        ideas: state.ideas.filter((i) => i.id !== id),
+        plantedIdeas: idea ? [...state.plantedIdeas, { ...idea, status: 'planted' }] : state.plantedIdeas,
+      }
+    })
     if (supabase) {
       const { error } = await supabase
         .from('ideas')
