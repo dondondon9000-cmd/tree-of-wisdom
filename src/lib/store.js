@@ -127,6 +127,7 @@ export const useGardenStore = create((set, get) => ({
       category: row.category,
       confidence: row.confidence,
       status: 'planted',
+      plan: row.plan || null,
     }))
     set((state) => ({ plantedIdeas: [...loaded, ...state.plantedIdeas], plantedIdeasLoaded: true }))
   },
@@ -180,11 +181,75 @@ export const useGardenStore = create((set, get) => ({
   },
 
   // The workspace for a single planted idea — opened by tapping its
-  // bonsai in the Garden. Just a detail view for now (what got said,
-  // the title/summary); the actual "work on it" mechanic that would
-  // eventually grow the bonsai bigger is future work this is the
-  // entry point for.
+  // bonsai in the Garden. The first time an idea's workspace opens
+  // with no plan yet, generatePlan asks Haiku to sketch a short list
+  // of concrete next steps, which get cached on the idea (in memory
+  // and in Supabase) so they never regenerate on later visits.
+  // Checking a step off via togglePlanStep is "working on the idea" —
+  // BonsaiTree reads plan completion straight off the idea to decide
+  // how big to render the tree, so there's no separate progress state
+  // to keep in sync.
   workspaceIdea: null,
-  openWorkspace: (idea) => set({ workspaceIdea: idea }),
+  openWorkspace: (idea) => set({ workspaceIdea: idea, planError: null }),
   closeWorkspace: () => set({ workspaceIdea: null }),
+
+  generatingPlan: false,
+  planError: null,
+  generatePlan: async (idea) => {
+    if (!idea || idea.plan || get().generatingPlan) return
+    set({ generatingPlan: true, planError: null })
+    try {
+      const res = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          transcript: idea.transcript,
+          title: idea.title,
+          summary: idea.summary,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate a plan for this idea.')
+
+      const plan = { steps: data.steps }
+      set((state) => ({
+        plantedIdeas: state.plantedIdeas.map((i) => (i.id === idea.id ? { ...i, plan } : i)),
+        workspaceIdea:
+          state.workspaceIdea?.id === idea.id ? { ...state.workspaceIdea, plan } : state.workspaceIdea,
+      }))
+
+      if (supabase) {
+        const { error } = await supabase.from('ideas').update({ plan }).eq('id', idea.id)
+        if (error) console.error('Failed to save plan to Supabase:', error.message)
+      }
+    } catch (err) {
+      set({ planError: err.message })
+    } finally {
+      set({ generatingPlan: false })
+    }
+  },
+
+  togglePlanStep: (ideaId, stepIndex) => {
+    const applyToggle = (i) => {
+      if (i.id !== ideaId || !i.plan) return i
+      const steps = i.plan.steps.map((step, idx) => (idx === stepIndex ? { ...step, done: !step.done } : step))
+      return { ...i, plan: { ...i.plan, steps } }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyToggle),
+      workspaceIdea: state.workspaceIdea ? applyToggle(state.workspaceIdea) : state.workspaceIdea,
+    }))
+    if (supabase) {
+      const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+      if (idea?.plan) {
+        supabase
+          .from('ideas')
+          .update({ plan: idea.plan })
+          .eq('id', ideaId)
+          .then(({ error }) => {
+            if (error) console.error('Failed to save step progress to Supabase:', error.message)
+          })
+      }
+    }
+  },
 }))

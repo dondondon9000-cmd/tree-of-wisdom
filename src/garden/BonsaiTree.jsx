@@ -8,12 +8,14 @@ import SeedOutline from '../world/SeedOutline'
 
 const POT_HEIGHT = 0.2
 const GROW_DURATION = 1.4
+const STEP_GROW_SPEED = 2.5 // how fast the tree eases toward its target size, per second
 
 // A freshly planted idea starts life as a tiny sapling, not a
-// full-grown tree — there's no "work on this idea over time" mechanic
-// yet to justify it being any bigger than that. When that exists,
-// this is the constant it'll animate away from.
+// full-grown tree. It only gets bigger by actually being worked on —
+// each plan step checked off in IdeaWorkspace nudges it a bit closer
+// to FULL_SCALE, read straight off idea.plan.steps below.
 const BABY_SCALE = 0.38
+const FULL_SCALE = 1.0
 
 // One planted idea: a pedestal, a pot, and a unique bonsai (trunk +
 // foliage) built fresh per instance via buildBonsai() — same "unique
@@ -41,13 +43,22 @@ export default function BonsaiTree({ position, idea, justPlanted = false, onSele
   const bonsai = useMemo(() => buildBonsai(), [])
   const treeRef = useRef()
   const growProgress = useRef(justPlanted ? 0 : 1)
+  const currentScale = useRef(justPlanted ? 0 : BABY_SCALE)
 
   useFrame((_, delta) => {
     if (growProgress.current < 1) {
       growProgress.current = Math.min(1, growProgress.current + delta / GROW_DURATION)
       const eased = 1 - Math.pow(1 - growProgress.current, 3)
-      treeRef.current?.scale.setScalar(eased * BABY_SCALE)
+      currentScale.current = eased * BABY_SCALE
+      treeRef.current?.scale.setScalar(currentScale.current)
+      return
     }
+
+    const steps = idea?.plan?.steps
+    const completionRatio = steps?.length ? steps.filter((s) => s.done).length / steps.length : 0
+    const target = BABY_SCALE + (FULL_SCALE - BABY_SCALE) * completionRatio
+    currentScale.current += (target - currentScale.current) * Math.min(1, delta * STEP_GROW_SPEED)
+    treeRef.current?.scale.setScalar(currentScale.current)
   })
 
   function handleClick(e) {

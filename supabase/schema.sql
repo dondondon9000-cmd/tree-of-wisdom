@@ -23,3 +23,9 @@ create policy "Allow all access"
   for all
   using (true)
   with check (true);
+
+-- Migration: AI-generated step plan for a planted idea, e.g.
+-- {"steps": [{"text": "...", "done": false}, ...]}. Generated once
+-- (via api/plan.js) the first time a bonsai is opened in the Garden,
+-- then persisted here so it never regenerates for the same idea.
+alter table ideas add column if not exists plan jsonb;
