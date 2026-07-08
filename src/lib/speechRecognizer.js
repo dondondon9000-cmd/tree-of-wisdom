@@ -77,6 +77,15 @@ export function createSpeechRecognizer({ onInterim, onError } = {}) {
 
   function stop() {
     return new Promise((resolve) => {
+      // Set this unconditionally, first, before anything else — if
+      // Chrome's own auto-end (see onend below) fires at nearly the same
+      // moment as this call, the deferred restart it schedules checks
+      // this flag afterward. Setting it only inside the branch below
+      // left a window where that restart would still fire because it
+      // ran the check before this line ever executed, resurrecting a
+      // session the app already considered finished.
+      stopping = true
+
       // A fatal error can end the session before stop() is ever called —
       // recognition.stop() on an already-ended recognizer won't fire
       // another onend, so waiting on one here would hang forever.
@@ -85,7 +94,6 @@ export function createSpeechRecognizer({ onInterim, onError } = {}) {
         return
       }
       stopResolve = resolve
-      stopping = true
       recognition.stop()
     })
   }
