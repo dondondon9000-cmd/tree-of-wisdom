@@ -137,6 +137,13 @@
   gap: 6px;
 }
 
+.workshop-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .workshop-task label {
   display: flex;
   align-items: flex-start;
@@ -156,6 +163,18 @@
 .workshop-task.done span {
   color: #8a7d68;
   text-decoration: line-through;
+}
+
+.workshop-task-focus-btn {
+  flex-shrink: 0;
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  background: rgba(255, 207, 138, 0.35);
+  color: #3a2410;
+  cursor: pointer;
 }
 
 .workshop-task-form,
@@ -305,4 +324,73 @@
   color: #16330f;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.workshop-focus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 4px;
+}
+
+.workshop-focus-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #4a3d2a;
+}
+
+.workshop-focus-task {
+  margin: 0;
+  color: #16330f;
+  text-align: center;
+}
+
+.workshop-focus-timer {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3a2410;
+  font-variant-numeric: tabular-nums;
+}
+
+.workshop-focus-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: #2a2016;
+}
+
+.workshop-focus-done input[type='checkbox'] {
+  accent-color: #3f6b2e;
+  cursor: pointer;
+}
+
+.workshop-focus-notes {
+  width: 100%;
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  color: #2a2016;
+  resize: vertical;
+}
+
+.workshop-focus-end {
+  border: 2px solid rgba(20, 15, 10, 0.85);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: linear-gradient(160deg, #ffcf8a, #d68a4a);
+  color: #3a2410;
+  cursor: pointer;
 }
