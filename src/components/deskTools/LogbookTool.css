@@ -1,0 +1,87 @@
+.logbook-mic-button {
+  align-self: center;
+  margin-top: 8px;
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  color: #3a2f22;
+  cursor: pointer;
+}
+
+.logbook-mic-button.active {
+  background: rgba(255, 62, 108, 0.85);
+  color: #fff6f0;
+  border-color: transparent;
+  animation: logbook-mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes logbook-mic-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.logbook-note-interim {
+  text-align: center;
+  font-style: italic;
+  font-size: 0.82rem;
+  color: #6b5c45;
+  margin: 8px 0 0;
+}
+
+.logbook-checkin {
+  background: rgba(158, 194, 255, 0.15);
+  border: 1px solid rgba(20, 15, 10, 0.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logbook-checkin-message {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #2a2016;
+}
+
+.logbook-suggested-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.logbook-suggested-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #2a2016;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 5px 8px;
+}
+
+.logbook-suggested-task button {
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  background: rgba(147, 194, 92, 0.3);
+  color: #16330f;
+  cursor: pointer;
+  white-space: nowrap;
+}

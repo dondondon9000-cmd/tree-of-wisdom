@@ -4,6 +4,33 @@ import { randomFieldPosition } from './randomFieldPosition'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// The Board tool replaced the old flat `tasks` list with `milestones`
+// (phases of grouped tasks) — this runs once at load time so ideas
+// planted before that change still show their existing tasks, folded
+// into a single default milestone, instead of silently losing them.
+function withMigratedMilestones(row) {
+  if (row.milestones && row.milestones.length > 0) return row.milestones
+  if (row.tasks && row.tasks.length > 0) return [{ id: 'migrated', title: 'Tasks', tasks: row.tasks }]
+  return []
+}
+
+// Shared by the desk tools' write-through-to-Supabase actions below —
+// each one already updated its own in-memory copy of `field` via
+// `set()`, so this just re-reads that same value back off the store
+// and pushes it to the matching column.
+function persistIdeaField(get, ideaId, field) {
+  if (!supabase) return
+  const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+  if (!idea) return
+  supabase
+    .from('ideas')
+    .update({ [field]: idea[field] })
+    .eq('id', ideaId)
+    .then(({ error }) => {
+      if (error) console.error(`Failed to save ${field} to Supabase:`, error.message)
+    })
+}
+
 // isRecording drives the visual "listening" state (veil, hint text,
 // talk-seed breathing). draft is the idea currently being processed
 // after you stop talking — its status walks through
@@ -133,6 +160,11 @@ export const useGardenStore = create((set, get) => ({
       brief: row.brief || null,
       tasks: row.tasks || [],
       planRevealed: row.plan_revealed || false,
+      milestones: withMigratedMilestones(row),
+      research: row.research || [],
+      decisions: row.decisions || [],
+      ledger: row.ledger || {},
+      notebook: row.notebook || {},
     }))
     set((state) => ({ plantedIdeas: [...loaded, ...state.plantedIdeas], plantedIdeasLoaded: true }))
   },
@@ -433,13 +465,14 @@ export const useGardenStore = create((set, get) => ({
     if (!idea || get().generatingCheckin) return
     set({ generatingCheckin: true, checkinError: null })
     try {
+      const flattenedTasks = (idea.milestones || []).flatMap((m) => m.tasks)
       const res = await fetch('/api/checkin', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           title: idea.title,
           brief: idea.brief,
-          tasks: idea.tasks || [],
+          tasks: flattenedTasks,
           notes: idea.notes || [],
         }),
       })
@@ -473,5 +506,154 @@ export const useGardenStore = create((set, get) => ({
           if (error) console.error('Failed to save plan-reveal state to Supabase:', error.message)
         })
     }
+  },
+
+  // --- The Board: phases of grouped tasks, replacing the old flat
+  // `tasks` list as the primary work surface (see
+  // withMigratedMilestones above for how existing flat tasks arrive
+  // here).
+  addMilestone: (ideaId, title) => {
+    const milestone = { id: crypto.randomUUID(), title, tasks: [] }
+    const applyAdd = (i) => (i.id === ideaId ? { ...i, milestones: [...(i.milestones || []), milestone] } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'milestones')
+  },
+
+  addMilestoneTask: (ideaId, milestoneIndex, text) => {
+    const applyAdd = (i) => {
+      if (i.id !== ideaId) return i
+      const milestones = (i.milestones || []).map((m, idx) =>
+        idx === milestoneIndex ? { ...m, tasks: [...m.tasks, { text, done: false }] } : m
+      )
+      return { ...i, milestones }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'milestones')
+  },
+
+  toggleMilestoneTask: (ideaId, milestoneIndex, taskIndex) => {
+    const applyToggle = (i) => {
+      if (i.id !== ideaId) return i
+      const milestones = (i.milestones || []).map((m, mIdx) => {
+        if (mIdx !== milestoneIndex) return m
+        const tasks = m.tasks.map((t, tIdx) => (tIdx === taskIndex ? { ...t, done: !t.done } : t))
+        return { ...m, tasks }
+      })
+      return { ...i, milestones }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyToggle),
+      roomIdea: state.roomIdea ? applyToggle(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'milestones')
+  },
+
+  // Used by the Logbook's "add" button on an AI check-in suggestion —
+  // there's no "current milestone" concept to target, so this creates
+  // a default one on first use rather than forcing you to have already
+  // built out the Board before check-in suggestions are useful.
+  addTaskToFirstMilestone: (ideaId, text) => {
+    const idea = get().plantedIdeas.find((i) => i.id === ideaId)
+    if (!idea) return
+    if (!idea.milestones || idea.milestones.length === 0) {
+      get().addMilestone(ideaId, 'Tasks')
+    }
+    get().addMilestoneTask(ideaId, 0, text)
+  },
+
+  // --- Research: reference notes, links, and open questions.
+  addResearchNote: (ideaId, text) => {
+    const entry = { text, createdAt: new Date().toISOString() }
+    const applyAdd = (i) => (i.id === ideaId ? { ...i, research: [...(i.research || []), entry] } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'research')
+  },
+
+  // --- Decisions: pros/cons, risks, and alternatives considered —
+  // kept as one list tagged by `kind` rather than three separate
+  // columns, since they're all "a reasoning note about the idea" and
+  // the UI just filters by kind per section.
+  addDecision: (ideaId, kind, text) => {
+    const entry = { kind, text, createdAt: new Date().toISOString() }
+    const applyAdd = (i) => (i.id === ideaId ? { ...i, decisions: [...(i.decisions || []), entry] } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'decisions')
+  },
+
+  // --- Ledger: resources, people, and a simple budget.
+  addLedgerResource: (ideaId, text) => {
+    const applyAdd = (i) => {
+      if (i.id !== ideaId) return i
+      const ledger = i.ledger || {}
+      return { ...i, ledger: { ...ledger, resources: [...(ledger.resources || []), { text, have: false }] } }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'ledger')
+  },
+
+  toggleLedgerResource: (ideaId, index) => {
+    const applyToggle = (i) => {
+      if (i.id !== ideaId) return i
+      const ledger = i.ledger || {}
+      const resources = (ledger.resources || []).map((r, idx) => (idx === index ? { ...r, have: !r.have } : r))
+      return { ...i, ledger: { ...ledger, resources } }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyToggle),
+      roomIdea: state.roomIdea ? applyToggle(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'ledger')
+  },
+
+  addLedgerPerson: (ideaId, text) => {
+    const applyAdd = (i) => {
+      if (i.id !== ideaId) return i
+      const ledger = i.ledger || {}
+      return { ...i, ledger: { ...ledger, people: [...(ledger.people || []), { text }] } }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyAdd),
+      roomIdea: state.roomIdea ? applyAdd(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'ledger')
+  },
+
+  setLedgerBudget: (ideaId, field, value) => {
+    const applySet = (i) => {
+      if (i.id !== ideaId) return i
+      const ledger = i.ledger || {}
+      return { ...i, ledger: { ...ledger, [field]: value } }
+    }
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applySet),
+      roomIdea: state.roomIdea ? applySet(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'ledger')
+  },
+
+  // --- Notebook: the idea's foundation — goal, constraints, success
+  // criteria. Just three plain text fields, saved together.
+  updateNotebook: (ideaId, updates) => {
+    const applyUpdate = (i) => (i.id === ideaId ? { ...i, notebook: { ...(i.notebook || {}), ...updates } } : i)
+    set((state) => ({
+      plantedIdeas: state.plantedIdeas.map(applyUpdate),
+      roomIdea: state.roomIdea ? applyUpdate(state.roomIdea) : state.roomIdea,
+    }))
+    persistIdeaField(get, ideaId, 'notebook')
   },
 }))

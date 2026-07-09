@@ -1,0 +1,60 @@
+.ledger-resource {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(20, 15, 10, 0.15);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.ledger-resource label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #3a2f22;
+}
+
+.ledger-resource input[type='checkbox'] {
+  accent-color: #3f6b2e;
+  cursor: pointer;
+}
+
+.ledger-resource.have span {
+  color: #8a7d68;
+}
+
+.ledger-resource-status {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: #8a7d68;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ledger-budget-row {
+  display: flex;
+  gap: 16px;
+}
+
+.ledger-budget-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #4a3d2a;
+}
+
+.ledger-budget-row input {
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  color: #2a2016;
+}

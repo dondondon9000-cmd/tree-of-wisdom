@@ -1,0 +1,130 @@
+/* Shared styling for every desk tool (NotebookTool, ResearchTool,
+   BoardTool, LedgerTool, DecisionsTool, LogbookTool, OutTrayTool) —
+   one set of list/form/button conventions instead of each tool
+   reinventing the same "list + add form" look. */
+
+.desk-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.desk-tool-intro {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b5c45;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.desk-tool-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.desk-tool-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #4a3d2a;
+}
+
+.desk-tool-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #8a7d68;
+}
+
+.desk-tool-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desk-tool-item {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(20, 15, 10, 0.15);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  color: #3a2f22;
+  line-height: 1.35;
+}
+
+.desk-tool-form {
+  display: flex;
+  gap: 6px;
+}
+
+.desk-tool-form input,
+.desk-tool-form select {
+  flex: 1;
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  color: #2a2016;
+}
+
+.desk-tool-form button {
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(147, 194, 92, 0.3);
+  color: #16330f;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.desk-tool-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.desk-tool-textarea {
+  width: 100%;
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  color: #2a2016;
+  resize: vertical;
+}
+
+.desk-tool-primary-button {
+  align-self: center;
+  border: 2px solid rgba(20, 15, 10, 0.85);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: linear-gradient(160deg, #ffd9e8, #ff9ec4);
+  color: #3a1224;
+  cursor: pointer;
+}
+
+.desk-tool-primary-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.desk-tool-error {
+  color: #a13a2a;
+  font-size: 0.82rem;
+  text-align: center;
+  margin: 0;
+}

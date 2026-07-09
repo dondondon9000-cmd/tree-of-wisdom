@@ -1,0 +1,60 @@
+.board-milestone {
+  background: rgba(255, 207, 138, 0.1);
+  border: 1px solid rgba(20, 15, 10, 0.15);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.board-milestone-title {
+  margin: 0;
+  font-weight: 700;
+  color: #3a2410;
+  font-size: 0.92rem;
+}
+
+.board-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.board-task label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: #2a2016;
+  line-height: 1.35;
+}
+
+.board-task input[type='checkbox'] {
+  margin-top: 3px;
+  accent-color: #3f6b2e;
+  cursor: pointer;
+}
+
+.board-task.done span {
+  color: #8a7d68;
+  text-decoration: line-through;
+}
+
+.board-task-focus-btn {
+  flex-shrink: 0;
+  border: 1px solid rgba(20, 15, 10, 0.2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  background: rgba(255, 207, 138, 0.35);
+  color: #3a2410;
+  cursor: pointer;
+}
+
+.board-milestone-form {
+  margin-top: 4px;
+}

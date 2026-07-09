@@ -46,3 +46,27 @@ alter table ideas add column if not exists tasks jsonb not null default '[]'::js
 -- been completed for this idea — false shows the reveal every visit
 -- through the door; true skips straight to the Workshop dashboard.
 alter table ideas add column if not exists plan_revealed boolean not null default false;
+
+-- Migration: the Workshop's desk tools (WorkshopDashboard.jsx). Each
+-- idea's ongoing work is split across purpose-built tools instead of
+-- one flat dashboard:
+--   milestones — phases of grouped tasks, e.g.
+--     [{"id": "...", "title": "Research", "tasks": [{"text": "...", "done": false}]}]
+--     Replaces the old flat `tasks` column as the primary work
+--     surface; existing flat tasks are migrated into a single
+--     "Tasks" milestone in the store the first time an idea's board
+--     loads, rather than via a SQL data migration.
+--   research — reference notes/links/open questions, e.g.
+--     [{"text": "...", "createdAt": "..."}]
+--   decisions — pros/cons/risks/alternatives considered, e.g.
+--     [{"kind": "pro" | "con" | "risk" | "alternative", "text": "...", "createdAt": "..."}]
+--   ledger — resources, people, and budget, e.g.
+--     {"resources": [{"text": "...", "have": false}], "people": [{"text": "..."}],
+--      "budgetEstimate": null, "budgetSpent": null}
+--   notebook — the idea's foundation, e.g.
+--     {"goal": "...", "constraints": "...", "success": "..."}
+alter table ideas add column if not exists milestones jsonb not null default '[]'::jsonb;
+alter table ideas add column if not exists research jsonb not null default '[]'::jsonb;
+alter table ideas add column if not exists decisions jsonb not null default '[]'::jsonb;
+alter table ideas add column if not exists ledger jsonb not null default '{}'::jsonb;
+alter table ideas add column if not exists notebook jsonb not null default '{}'::jsonb;
