@@ -146,5 +146,19 @@ export function buildBonsai() {
 
   const blossoms = buildBlossoms(foliage)
 
-  return { trunk, trunkOutline, foliage, blossoms }
+  // The tallest point across the whole canopy, in the same unscaled
+  // local coordinates the treeRef group's scale is later applied to —
+  // lets BonsaiTree position the title label just above however tall
+  // *this* randomized tree actually gets, instead of a fixed height
+  // tuned only for the baby-scale case (which the canopy grows well
+  // past by the time a tree is fully grown).
+  let topHeight = 0
+  for (const clump of foliage) {
+    clump.geometry.computeBoundingBox()
+    topHeight = Math.max(topHeight, clump.geometry.boundingBox.max.y)
+  }
+  blossoms.computeBoundingBox()
+  topHeight = Math.max(topHeight, blossoms.boundingBox.max.y)
+
+  return { trunk, trunkOutline, foliage, blossoms, topHeight }
 }

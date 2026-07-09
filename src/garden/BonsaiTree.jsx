@@ -11,6 +11,7 @@ const POT_HEIGHT = 0.2
 const GROW_DURATION = 1.4
 const STEP_GROW_SPEED = 2.5 // how fast the tree eases toward its target size, per second
 const BLOOM_FLASH_DURATION = 1.6 // one-time pink flash when a plan's last step is checked off
+const LABEL_MARGIN = 0.25 // clearance kept above the canopy's actual current top
 
 // A freshly planted idea starts life as a tiny sapling, not a
 // full-grown tree. It only gets bigger by actually being worked on —
@@ -32,9 +33,13 @@ const FULL_SCALE = 1.0
 // growing into it. Every other bonsai just renders at BABY_SCALE
 // directly, no animation.
 //
-// The title label lives outside the scaling group, at a fixed height,
-// so it stays a consistent, readable size regardless of how big the
-// tree itself currently is.
+// The title label lives outside the scaling group so its own size
+// stays constant regardless of how big the tree currently is, but its
+// Y position is still updated every frame to track currentScale *
+// bonsai.topHeight (the canopy's actual tallest point in unscaled
+// coordinates) — a fixed label height only ever cleared the canopy at
+// BABY_SCALE; a fully grown tree's foliage reaches well past a fixed
+// point and would grow up through the text.
 //
 // onSelect fires from the pedestal and pot specifically, not the tree
 // itself — the tree is tiny at BABY_SCALE and would be a frustratingly
@@ -51,6 +56,7 @@ export default function BonsaiTree({
 }) {
   const bonsai = useMemo(() => buildBonsai(), [])
   const treeRef = useRef()
+  const labelRef = useRef()
   const flashLightRef = useRef()
   const growProgress = useRef(justPlanted ? 0 : 1)
   const currentScale = useRef(justPlanted ? 0 : BABY_SCALE)
@@ -93,6 +99,11 @@ export default function BonsaiTree({
       if (flashLightRef.current) {
         flashLightRef.current.intensity = Math.sin(flashProgress.current * Math.PI) * 3.5
       }
+    }
+
+    if (labelRef.current) {
+      labelRef.current.position.y =
+        PEDESTAL_HEIGHT + POT_HEIGHT + currentScale.current * bonsai.topHeight + LABEL_MARGIN
     }
   })
 
@@ -164,8 +175,9 @@ export default function BonsaiTree({
 
       {idea?.title && (
         <Text
+          ref={labelRef}
           font="/fonts/manrope-400.woff"
-          position={[0, PEDESTAL_HEIGHT + POT_HEIGHT + 0.85, 0]}
+          position={[0, PEDESTAL_HEIGHT + POT_HEIGHT + currentScale.current * bonsai.topHeight + LABEL_MARGIN, 0]}
           fontSize={0.24}
           color="#fff6e6"
           anchorX="center"
